@@ -1,4 +1,4 @@
-import { fitData } from './fitting';
+import { fitData, autoFit } from './fitting';
 
 export const tinv = (_p: number, df: number): number => {
   if (df <= 0) return 0;
@@ -31,7 +31,7 @@ export interface StandardData {
 export const calculateAdvancedLoD = (
   blanks: number[],
   standards: StandardData[],
-  method: 'linear' | '4pl' = 'linear',
+  method: 'linear' | '4pl' | '5pl' | 'auto' = '4pl',
   alpha = 0.05,
   beta = 0.05
 ) => {
@@ -51,24 +51,22 @@ export const calculateAdvancedLoD = (
   // 3. Curve Fitting
   const x = standards.map(s => s.concentration);
   const y = standards.map(s => s.readout);
-  const fit = fitData(x, y, method);
+  const fit = method === 'auto' ? autoFit(x, y) : fitData(x, y, method);
 
   // 4. LoD in Concentration space (Inverse calculation)
   let lodConc = 0;
-  if (method === 'linear') {
-    const m = fit.parameters['Slope (m)'];
-    const b = fit.parameters['Intercept (b)'];
-    lodConc = m !== 0 ? (ld - b) / m : 0;
-  } else if (method === '4pl') {
-    const a = fit.parameters['Bottom (a)'];
-    const b = fit.parameters['Slope (b)'];
-    const c = fit.parameters['EC50 (c)'];
-    const d = fit.parameters['Top (d)'];
-    
-    // Inverse 4PL
-    const ratio = (a - ld) / (ld - d);
+  const p = fit.parameters;
+  if (fit.method === 'linear') {
+    lodConc = p['Slope (m)'] !== 0 ? (ld - p['Intercept (b)']) / p['Slope (m)'] : 0;
+  } else if (fit.method === '4pl') {
+    const ratio = (p['Bottom (a)'] - ld) / (ld - p['Top (d)']);
+    if (ratio > 0) lodConc = p['EC50 (c)'] * Math.pow(ratio, 1 / p['Slope (b)']);
+  } else if (fit.method === '5pl') {
+    // Inverse 5PL: x = c * ((( (a-d)/(y-d) )^(1/g) ) - 1 )^(1/b)
+    const ratio = (p['Bottom (a)'] - p['Top (d)']) / (ld - p['Top (d)']);
     if (ratio > 0) {
-      lodConc = c * Math.pow(ratio, 1 / b);
+      const inner = Math.pow(ratio, 1 / p['Asymmetry (g)']) - 1;
+      if (inner > 0) lodConc = p['EC50 (c)'] * Math.pow(inner, 1 / p['Slope (b)']);
     }
   }
 
