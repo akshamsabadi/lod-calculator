@@ -51,15 +51,28 @@ const formatSuperscript = (val: number): ReactNode => {
 const CustomXAxisTick = ({ x, y, payload }: any) => {
   if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>0</text>;
   const val = payload.value;
-  const exponent = Math.floor(Math.log10(Math.abs(val)));
-  const base = (val / Math.pow(10, exponent)).toFixed(1);
-  const isOne = parseFloat(base) === 1;
+  const exponent = Math.round(Math.log10(Math.abs(val)));
 
   return (
     <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>
-      {isOne ? null : <tspan>{parseFloat(base)} × </tspan>}
-      <tspan>10</tspan>
+      <tspan>1 × 10</tspan>
       <tspan baselineShift="super" fontSize={8}>{exponent}</tspan>
+    </text>
+  );
+};
+
+const CustomLcLabel = ({ viewBox }: any) => {
+  return (
+    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="#fab387" fontSize={10}>
+      L<tspan baselineShift="sub" fontSize={8}>C</tspan>
+    </text>
+  );
+};
+
+const CustomLdLabel = ({ viewBox }: any) => {
+  return (
+    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="#a6e3a1" fontSize={10}>
+      L<tspan baselineShift="sub" fontSize={8}>D</tspan>
     </text>
   );
 };
@@ -88,6 +101,20 @@ function App() {
       return calculateAdvancedLoD(blanks, standards, fitMethod);
     } catch (e) { return null; }
   }, [blankSignals, standardRows, fitMethod]);
+
+  const xTicks = useMemo(() => {
+    if (!results) return [];
+    const minX = Math.min(...results.fit.actualX.filter(x => x > 0));
+    const maxX = Math.max(...results.fit.actualX);
+    const zeroX = minX / 10;
+    const logMin = Math.floor(Math.log10(zeroX));
+    const logMax = Math.ceil(Math.log10(maxX * 1.5));
+    const ticks = [];
+    for (let i = logMin; i <= logMax; i++) {
+      ticks.push(Math.pow(10, i));
+    }
+    return ticks;
+  }, [results]);
 
   const chartData = useMemo(() => {
     if (!results) return [];
@@ -149,7 +176,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.7</h1>
+          <h1>Bioassay Analytics Pro v9.8</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -213,10 +240,11 @@ function App() {
                 </div>
                 <div className="chart-frame">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                    <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
                       <XAxis 
                         dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="#cdd6f4" 
+                        ticks={xTicks}
                         tick={<CustomXAxisTick />}
                         label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 20 }}
                       />
@@ -228,8 +256,8 @@ function App() {
                       <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
                       <Scatter data={scatterData} fill="#f38ba8" name="Measured Data" dataKey="y" />
                       
-                      <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={{ position: 'right', value: 'Lc', fill: '#fab387', fontSize: 10 }} />
-                      <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={{ position: 'right', value: 'Ld', fill: '#a6e3a1', fontSize: 10 }} />
+                      <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={<CustomLcLabel />} />
+                      <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={<CustomLdLabel />} />
                       <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 10 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -261,13 +289,13 @@ function App() {
                   <div className="stat-row"><span className="stat-label">Blank Mean</span><span className="stat-value">{results.meanBlank.toFixed(4)}</span></div>
                   <div className="stat-row"><span className="stat-label">Blank SD</span><span className="stat-value">{results.sdBlank.toFixed(4)}</span></div>
                   <div className="stat-row"><span className="stat-label">Pooled SD</span><span className="stat-value">{results.sdPooled.toFixed(4)}</span></div>
-                  <div className="stat-row"><span className="stat-label">L_Blank (Lc)</span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
-                  <div className="stat-row"><span className="stat-label">L_Detection (Ld)</span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label">L_Blank (L<sub>C</sub>)</span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label">L_Detection (L<sub>D</sub>)</span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.7...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.8...</p></div>
           )}
         </section>
       </main>
