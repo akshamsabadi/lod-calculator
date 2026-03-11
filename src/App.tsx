@@ -10,7 +10,8 @@ import {
   Line,
   ComposedChart,
   ReferenceLine,
-  Area
+  Area,
+  Legend
 } from 'recharts';
 import './App.css';
 
@@ -69,11 +70,11 @@ function App() {
     const logMin = Math.log10(zeroX);
     const logMax = Math.log10(maxX * 1.5);
     for (let i = 0; i <= 100; i++) {
-      const x = Math.pow(10, logMin + i * (logMax - logMin) / 100);
-      const fitX = x < minX * 0.5 ? 0 : x;
+      const xVal = Math.pow(10, logMin + i * (logMax - logMin) / 100);
+      const fitX = xVal < minX * 0.5 ? 0 : xVal;
       const pred = results.fit.predict(fitX);
       const { low, high } = results.fit.getCI(fitX);
-      data.push({ x, trend: pred, ciLow: low, ciHigh: high });
+      data.push({ x: xVal, trend: pred, ciLow: low, ciHigh: high });
     }
     return data;
   }, [results]);
@@ -84,7 +85,10 @@ function App() {
     const zeroX = minX / 10;
     
     // Include standards
-    const points = results.fit.actualX.map((x, i) => ({ x: x === 0 ? zeroX : x, y: results.fit.actualY[i] }));
+    const points: {x: number, y: number}[] = results.fit.actualX.map((x, i) => ({ 
+      x: x === 0 ? zeroX : x, 
+      y: results.fit.actualY[i] 
+    }));
     
     // Include blanks at zeroX position
     const blanks = blankSignals.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
@@ -101,8 +105,8 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.1</h1>
-          <p className="header-description">Miller-style clinical LoD fitting with 95% Confidence Intervals.</p>
+          <h1>Bioassay Analytics Pro v9.2</h1>
+          <p className="header-description">Miller-style clinical LoD fitting with 95% Confidence Interval Ribbon.</p>
         </div>
       </header>
       <main className="main-container">
@@ -143,17 +147,22 @@ function App() {
                       <XAxis 
                         dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="#cdd6f4" 
                         tickFormatter={(val) => {
-                          const minX = Math.min(...results.fit.actualX.filter(x => x > 0));
+                          const nonZeroX = results.fit.actualX.filter(x => x > 0);
+                          const minX = nonZeroX.length > 0 ? Math.min(...nonZeroX) : 1e-3;
                           return val < minX * 0.2 ? '0' : val.toExponential(1);
                         }}
                         label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 12, offset: 25 }}
                       />
                       <YAxis stroke="#cdd6f4" label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 12 }} />
                       <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244' }} />
-                      <Area dataKey="ciHigh" data={chartData} stroke="none" fill="#89b4fa" fillOpacity={0.15} isAnimationActive={false} />
-                      <Area dataKey="ciLow" data={chartData} stroke="none" fill="transparent" isAnimationActive={false} />
-                      <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} />
-                      <Scatter data={scatterData} fill="#f38ba8" />
+                      <Legend verticalAlign="top" height={36} />
+                      
+                      <Area dataKey="ciHigh" stroke="none" fill="#89b4fa" fillOpacity={0.2} isAnimationActive={false} name="95% CI" />
+                      <Area dataKey="ciLow" stroke="none" fill="#181825" fillOpacity={1} isAnimationActive={false} />
+                      
+                      <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
+                      <Scatter data={scatterData} fill="#f38ba8" name="Measured Data" dataKey="y" />
+                      
                       <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={{ position: 'right', value: 'Lc', fill: '#fab387', fontSize: 10 }} />
                       <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={{ position: 'right', value: 'Ld', fill: '#a6e3a1', fontSize: 10 }} />
                       <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 11 }} />
