@@ -162,7 +162,7 @@ function App() {
     return points;
   }, [results, blankSignals]);
 
-  const { yDomain, yTicks } = useMemo(() => {
+  const { yDomain, yTicks } = useMemo((): { yDomain: [number | 'auto', number | 'auto'], yTicks: number[] | undefined } => {
     if (!results) return { yDomain: [0, 'auto'], yTicks: undefined };
     const maxData = Math.max(...results.fit.actualY, results.ld);
     const minData = Math.min(...results.fit.actualY, 0);
@@ -203,7 +203,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v10.3</h1>
+          <h1>Bioassay Analytics Pro v10.3.1</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
