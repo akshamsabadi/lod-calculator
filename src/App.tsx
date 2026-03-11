@@ -151,6 +151,13 @@ function App() {
     return points;
   }, [results, blankSignals]);
 
+  const yDomain = useMemo(() => {
+    if (!results) return [0, 'auto'];
+    const maxData = Math.max(...results.fit.actualY, results.ld);
+    const minData = Math.min(...results.fit.actualY, 0);
+    return [minData, maxData * 1.15];
+  }, [results]);
+
   const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
     setStandardRows(standardRows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
@@ -176,7 +183,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.8</h1>
+          <h1>Bioassay Analytics Pro v9.9</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -240,25 +247,30 @@ function App() {
                 </div>
                 <div className="chart-frame">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                    <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 40 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
                       <XAxis 
                         dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="#cdd6f4" 
                         ticks={xTicks}
                         tick={<CustomXAxisTick />}
-                        label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 20 }}
+                        label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 25 }}
                       />
-                      <YAxis stroke="#cdd6f4" label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11 }} />
+                      <YAxis 
+                        stroke="#cdd6f4" 
+                        domain={yDomain} 
+                        allowDataOverflow={true}
+                        label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11, offset: -5 }} 
+                      />
                       <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px', fontSize: '12px' }} />
                       <Legend verticalAlign="top" height={36} iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
                       
                       <Area dataKey="ciRange" stroke="none" fill="#89b4fa" fillOpacity={0.15} isAnimationActive={false} name="95% CI" />
                       <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
-                      <Scatter data={scatterData} fill="#f38ba8" name="Measured Data" dataKey="y" />
+                      <Scatter data={scatterData} fill="#f38ba8" name="Measured Data" dataKey="y" isAnimationActive={false} />
                       
-                      <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={<CustomLcLabel />} />
-                      <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={<CustomLdLabel />} />
-                      <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 10 }} />
+                      <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" isAnimationActive={false} label={<CustomLcLabel />} />
+                      <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" isAnimationActive={false} label={<CustomLdLabel />} />
+                      <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} isAnimationActive={false} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 10 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -295,7 +307,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.8...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.9...</p></div>
           )}
         </section>
       </main>
