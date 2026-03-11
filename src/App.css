@@ -170,6 +170,7 @@ header {
 
 .conc-input {
   width: 55px;
+  height: 32px;
   background: var(--surface0);
   border: 1px solid var(--surface1);
   border-radius: 4px;
@@ -188,6 +189,7 @@ header {
 
 .signals-input {
   flex: 1;
+  height: 32px;
   background: var(--surface0);
   border: 1px solid var(--surface1);
   border-radius: 4px;
@@ -195,9 +197,6 @@ header {
   color: var(--text);
   font-family: 'Google Sans Mono', monospace;
   font-size: 0.8rem;
-  min-height: 28px;
-  resize: none;
-  line-height: 1.4;
 }
 
 .signals-input:focus, .conc-input:focus {

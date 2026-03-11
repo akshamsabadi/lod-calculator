@@ -22,21 +22,21 @@ interface StandardRow {
 }
 
 const DEFAULT_STANDARDS: StandardRow[] = [
-  { id: '1', conc: '0.001', signals: '0.08, 0.19, 0.05, 0.22, 0.11' },
-  { id: '2', conc: '0.003', signals: '0.11, 0.24, 0.09, 0.18, 0.20' },
-  { id: '3', conc: '0.01', signals: '0.15, 0.35, 0.12, 0.28, 0.19' },
-  { id: '4', conc: '0.03', signals: '0.22, 0.51, 0.28, 0.40, 0.31' },
-  { id: '5', conc: '0.1', signals: '0.45, 0.88, 0.52, 0.70, 0.61' },
-  { id: '6', conc: '0.3', signals: '1.10, 1.75, 1.25, 1.60, 1.42' },
-  { id: '7', conc: '1', signals: '2.50, 3.80, 2.85, 3.45, 3.10' },
-  { id: '8', conc: '3', signals: '3.60, 4.90, 3.95, 4.65, 4.25' },
-  { id: '9', conc: '10', signals: '4.10, 5.25, 4.40, 5.05, 4.75' },
-  { id: '10', conc: '30', signals: '4.35, 5.45, 4.65, 5.20, 4.90' },
-  { id: '11', conc: '100', signals: '4.50, 5.55, 4.75, 5.35, 5.05' },
-  { id: '12', conc: '300', signals: '4.60, 5.60, 4.85, 5.40, 5.15' },
+  { id: '1', conc: '0.001', signals: '0.10, 0.11, 0.10' },
+  { id: '2', conc: '0.003', signals: '0.11, 0.12, 0.11' },
+  { id: '3', conc: '0.01', signals: '0.14, 0.15, 0.14' },
+  { id: '4', conc: '0.03', signals: '0.23, 0.25, 0.24' },
+  { id: '5', conc: '0.1', signals: '0.53, 0.55, 0.54' },
+  { id: '6', conc: '0.3', signals: '1.22, 1.24, 1.23' },
+  { id: '7', conc: '1', signals: '2.54, 2.56, 2.55' },
+  { id: '8', conc: '3', signals: '3.77, 3.79, 3.78' },
+  { id: '9', conc: '10', signals: '4.54, 4.56, 4.55' },
+  { id: '10', conc: '30', signals: '4.83, 4.85, 4.84' },
+  { id: '11', conc: '100', signals: '4.94, 4.96, 4.95' },
+  { id: '12', conc: '300', signals: '4.97, 4.99, 4.98' },
 ];
 
-const DEFAULT_BLANKS = '0.10, 0.21, 0.08, 0.18, 0.12';
+const DEFAULT_BLANKS = '0.09, 0.10, 0.11';
 
 const formatSuperscript = (val: number): ReactNode => {
   if (val === 0 || isNaN(val)) return '0';
@@ -183,7 +183,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v10.0</h1>
+          <h1>Bioassay Analytics Pro v10.1</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -194,7 +194,7 @@ function App() {
       <main className="main-container">
         <aside className="sidebar">
           <section className="sidebar-section">
-            <span className="section-title">Model Options</span>
+            <span className="section-title" style={{ color: 'var(--mauve)' }}>Model Options</span>
             <select value={fitMethod} onChange={e => setFitMethod(e.target.value as any)} className="method-select">
               <option value="auto">Automatic (AICc Optimized)</option>
               <option value="4pl">4-Parameter Logistic (4PL)</option>
@@ -202,7 +202,7 @@ function App() {
             </select>
           </section>
           <section className="sidebar-section">
-            <span className="section-title">Plot Settings</span>
+            <span className="section-title" style={{ color: 'var(--sapphire)' }}>Plot Settings</span>
             <div className="input-group"><input type="text" className="text-input" placeholder="Title" value={plotTitle} onChange={e => setPlotTitle(e.target.value)} /></div>
             <div style={{display: 'flex', gap: '8px'}}>
               <input type="text" className="text-input" placeholder="X Axis" value={xAxisLabel} onChange={e => setXAxisLabel(e.target.value)} />
@@ -210,16 +210,16 @@ function App() {
             </div>
           </section>
           <section className="sidebar-section">
-            <span className="section-title">1. Blanks</span>
-            <div className="data-row"><div className="conc-input disabled">0</div><textarea className="signals-input" placeholder="Comma separated..." value={blankSignals} onChange={e => setBlankSignals(e.target.value)} /></div>
+            <span className="section-title" style={{ color: 'var(--peach)' }}>1. Blanks</span>
+            <div className="data-row"><div className="conc-input disabled" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>0</div><input type="text" className="signals-input" placeholder="Comma separated..." value={blankSignals} onChange={e => setBlankSignals(e.target.value)} /></div>
           </section>
           <section className="sidebar-section">
-            <span className="section-title">2. Standards</span>
+            <span className="section-title" style={{ color: 'var(--green)' }}>2. Standards</span>
             <div className="rows-container">
               {standardRows.map((r) => (
                 <div key={r.id} className="data-row">
                   <input type="text" className="conc-input" placeholder="Conc" value={r.conc} onChange={e => updateRow(r.id, 'conc', e.target.value)} />
-                  <textarea className="signals-input" placeholder="Signals..." value={r.signals} onChange={e => updateRow(r.id, 'signals', e.target.value)} />
+                  <input type="text" className="signals-input" placeholder="Signals..." value={r.signals} onChange={e => updateRow(r.id, 'signals', e.target.value)} />
                   <button className="remove-row-btn" onClick={() => setStandardRows(standardRows.filter(sr => sr.id !== r.id))}>×</button>
                 </div>
               ))}
