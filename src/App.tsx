@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, type ReactNode } from 'react';
+import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react';
 import { calculateAdvancedLoD, type StandardData, type AdvancedLoDResult } from './utils/calculations';
 import {
   Scatter,
@@ -127,12 +127,24 @@ const CustomLegend = () => {
 
 function App() {
   const chartRef = useRef<HTMLDivElement>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('app-theme') as 'dark' | 'light') || 'dark';
+  });
   const [blankSignals, setBlankSignals] = useState(DEFAULT_BLANKS);
   const [standardRows, setStandardRows] = useState<StandardRow[]>(DEFAULT_STANDARDS);
   const [fitMethod, setFitMethod] = useState<'4pl' | '5pl' | 'auto'>('auto');
   const [plotTitle, setPlotTitle] = useState('Dose-Response Fitting');
   const [xAxisLabel, setXAxisLabel] = useState('Concentration (mM)');
   const [yAxisLabel, setYAxisLabel] = useState('Signal Intensity');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('app-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   const handleDownloadPlot = () => {
     if (!chartRef.current) return;
@@ -145,37 +157,20 @@ function App() {
     const serializer = new XMLSerializer();
     let svgString = serializer.serializeToString(clone);
 
-    const colors = {
-      'var(--rosewater)': '#f5e0dc',
-      'var(--flamingo)': '#f2cdcd',
-      'var(--pink)': '#f5c2e7',
-      'var(--mauve)': '#cba6f7',
-      'var(--red)': '#f38ba8',
-      'var(--maroon)': '#eba0ac',
-      'var(--peach)': '#fab387',
-      'var(--yellow)': '#f9e2af',
-      'var(--green)': '#a6e3a1',
-      'var(--teal)': '#94e2d5',
-      'var(--sky)': '#89dceb',
-      'var(--sapphire)': '#74c7ec',
-      'var(--blue)': '#89b4fa',
-      'var(--lavender)': '#b4befe',
-      'var(--text)': '#cdd6f4',
-      'var(--subtext1)': '#bac2de',
-      'var(--subtext0)': '#a6adc8',
-      'var(--overlay2)': '#9399b2',
-      'var(--overlay1)': '#7f849c',
-      'var(--overlay0)': '#6c7086',
-      'var(--surface2)': '#585b70',
-      'var(--surface1)': '#45475a',
-      'var(--surface0)': '#313244',
-      'var(--base)': '#1e1e2e',
-      'var(--mantle)': '#181825',
-      'var(--crust)': '#11111b'
-    };
+    const docStyle = getComputedStyle(document.documentElement);
+    const varNames = [
+      '--rosewater', '--flamingo', '--pink', '--mauve', '--red', '--maroon', 
+      '--peach', '--yellow', '--green', '--teal', '--sky', '--sapphire', 
+      '--blue', '--lavender', '--text', '--subtext1', '--subtext0', 
+      '--overlay2', '--overlay1', '--overlay0', '--surface2', '--surface1', 
+      '--surface0', '--base', '--mantle', '--crust'
+    ];
     
-    for (const [v, c] of Object.entries(colors)) {
-      svgString = svgString.split(v).join(c);
+    for (const v of varNames) {
+      const c = docStyle.getPropertyValue(v).trim();
+      if (c) {
+        svgString = svgString.split(`var(${v})`).join(c);
+      }
     }
 
     const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -327,10 +322,11 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay LOD Fitter v10.8.9</h1>
+          <h1>Bioassay LOD Fitter v10.9</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="action-btn" onClick={toggleTheme}>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</button>
           <button className="action-btn" onClick={handleClearData}>Clear Data</button>
           <button className="action-btn" onClick={handleLoadDemo}>Load Demo</button>
         </div>
@@ -474,7 +470,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.9...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.9...</p></div>
           )}
         </section>
       </main>
