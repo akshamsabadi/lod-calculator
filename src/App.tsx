@@ -19,50 +19,68 @@ interface ChartPoint {
   trend?: number;
 }
 
-interface ChartData {
-  trend: ChartPoint[];
-  actual: ChartPoint[];
+interface StandardRow {
+  id: string;
+  conc: string;
+  signals: string;
 }
 
 function App() {
-  const [blanksInput, setBlanksInput] = useState('0.1, 0.12, 0.09, 0.11, 0.1');
-  const [standardsInput, setStandardsInput] = useState('1:0.2, 1:0.21, 5:0.8, 5:0.78, 10:1.5, 10:1.52, 50:6.2, 50:6.15, 100:11.8, 100:11.9');
+  const [blankSignals, setBlankSignals] = useState('0.1, 0.12, 0.09, 0.11, 0.1');
+  const [standardRows, setStandardRows] = useState<StandardRow[]>([
+    { id: '1', conc: '1', signals: '0.2, 0.22' },
+    { id: '2', conc: '5', signals: '0.8, 0.85' },
+    { id: '3', conc: '10', signals: '1.5, 1.6' },
+    { id: '4', conc: '50', signals: '6.2, 6.4' },
+    { id: '5', conc: '100', signals: '11.8, 12.1' },
+    { id: '6', conc: '500', signals: '15.2, 15.5' },
+    { id: '7', conc: '1000', signals: '16.1, 16.3' },
+  ]);
   const [fitMethod, setFitMethod] = useState<'linear' | '4pl' | '5pl' | 'auto'>('auto');
-  const [results, setResults] = useState<any>(null);
-  const [error, setError] = useState('');
-
-  const handleCalculate = () => {
-    setError('');
+  
+  // Results calculated automatically
+  const results = useMemo(() => {
     try {
-      const blanks = blanksInput
+      const blanks = blankSignals
         .split(',')
         .map(s => s.trim())
         .filter(s => s !== '')
-        .map(Number);
+        .map(Number)
+        .filter(n => !isNaN(n));
 
-      const standards: StandardData[] = standardsInput
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s !== '')
-        .map(pair => {
-          const parts = pair.split(':');
-          if (parts.length !== 2) throw new Error('Invalid format. Use Conc:Signal');
-          const [conc, readout] = parts.map(Number);
-          return { concentration: conc, readout: readout };
+      const standards: StandardData[] = [];
+      standardRows.forEach(row => {
+        const c = parseFloat(row.conc);
+        if (isNaN(c)) return;
+        row.signals.split(',').forEach(s => {
+          const val = parseFloat(s.trim());
+          if (!isNaN(val)) {
+            standards.push({ concentration: c, readout: val });
+          }
         });
+      });
 
-      if (blanks.some(isNaN) || standards.some(s => isNaN(s.concentration) || isNaN(s.readout))) {
-        throw new Error('Data must be numbers');
-      }
+      if (blanks.length < 2 || standards.length < 3) return null;
 
-      const res = calculateAdvancedLoD(blanks, standards, fitMethod);
-      setResults(res);
-    } catch (err: any) {
-      setError(err.message || 'Check your inputs');
+      return calculateAdvancedLoD(blanks, standards, fitMethod);
+    } catch (e) {
+      return null;
     }
+  }, [blankSignals, standardRows, fitMethod]);
+
+  const addRow = () => {
+    setStandardRows([...standardRows, { id: Math.random().toString(36), conc: '', signals: '' }]);
   };
 
-  const chartData = useMemo((): ChartData => {
+  const removeRow = (id: string) => {
+    setStandardRows(standardRows.filter(r => r.id !== id));
+  };
+
+  const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
+    setStandardRows(standardRows.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const chartData = useMemo(() => {
     if (!results) return { trend: [], actual: [] };
     
     const xValues = results.fit.actualX;
@@ -93,13 +111,13 @@ function App() {
       <header>
         <div className="header-content">
           <h1>Bioassay Curve Fitter & LoD Validator</h1>
-          <p className="header-description">Professional suite for non-linear regression, clinical limit of detection fitting, and assay performance metrics.</p>
+          <p className="header-description">Precision regression and clinical validation suite. Updates automatically as you enter data.</p>
         </div>
       </header>
 
       <main className="main-container">
         <aside className="sidebar">
-          <div className="sidebar-section">
+          <section className="sidebar-section">
             <span className="section-title">Model Configuration</span>
             <div className="input-group">
               <label className="input-label">Fitting Method</label>
@@ -108,41 +126,59 @@ function App() {
                 onChange={(e) => setFitMethod(e.target.value as any)}
                 className="method-select"
               >
-                <option value="auto">Automatic (4PL vs 5PL via AICc)</option>
+                <option value="auto">Automatic (AICc Optimized)</option>
                 <option value="4pl">4-Parameter Logistic (4PL)</option>
                 <option value="5pl">5-Parameter Logistic (5PL)</option>
                 <option value="linear">Linear Regression</option>
               </select>
             </div>
-          </div>
+          </section>
 
-          <div className="sidebar-section">
-            <span className="section-title">Data Entry</span>
-            <div className="input-group">
-              <label className="input-label">Negative Controls (Signal)</label>
+          <section className="sidebar-section">
+            <span className="section-title">1. Negative Controls (Blanks)</span>
+            <div className="data-table-header">
+              <div className="col-label">Conc.</div>
+              <div className="col-label">Signals (comma-separated)</div>
+            </div>
+            <div className="data-row locked">
+              <div className="conc-input disabled">0</div>
               <textarea
-                value={blanksInput}
-                onChange={(e) => setBlanksInput(e.target.value)}
-                placeholder="0.1, 0.12, 0.09..."
+                className="signals-input"
+                value={blankSignals}
+                onChange={(e) => setBlankSignals(e.target.value)}
+                placeholder="0.1, 0.12..."
               />
             </div>
-            <div className="input-group" style={{ marginTop: '16px' }}>
-              <label className="input-label">Standard Curve (Conc : Signal)</label>
-              <p className="input-hint">Replicates allowed (e.g. 10:1.2, 10:1.3)</p>
-              <textarea
-                value={standardsInput}
-                onChange={(e) => setStandardsInput(e.target.value)}
-                placeholder="10:1.2, 50:4.5..."
-                style={{ minHeight: '180px' }}
-              />
-            </div>
-          </div>
+          </section>
 
-          <button className="calc-btn" onClick={handleCalculate}>
-            Run Validation Fit
-          </button>
-          
-          {error && <div className="error-toast">{error}</div>}
+          <section className="sidebar-section">
+            <span className="section-title">2. Standard Curve Data</span>
+            <div className="data-table-header">
+              <div className="col-label">Conc.</div>
+              <div className="col-label">Signals (comma-separated)</div>
+            </div>
+            <div className="rows-container">
+              {standardRows.map((row) => (
+                <div key={row.id} className="data-row">
+                  <input
+                    type="number"
+                    className="conc-input"
+                    value={row.conc}
+                    onChange={(e) => updateRow(row.id, 'conc', e.target.value)}
+                    placeholder="Conc"
+                  />
+                  <textarea
+                    className="signals-input"
+                    value={row.signals}
+                    onChange={(e) => updateRow(row.id, 'signals', e.target.value)}
+                    placeholder="Signal replicates..."
+                  />
+                  <button className="remove-row-btn" onClick={() => removeRow(row.id)}>×</button>
+                </div>
+              ))}
+            </div>
+            <button className="add-row-btn" onClick={addRow}>+ Add Concentration Point</button>
+          </section>
         </aside>
 
         <section className="content-area">
@@ -184,7 +220,7 @@ function App() {
                         strokeWidth={3}
                         dot={false}
                         name="Model Fit"
-                        animationDuration={800}
+                        isAnimationActive={false}
                       />
                       <Scatter 
                         data={chartData.actual} 
@@ -244,6 +280,7 @@ function App() {
               <div className="prompt-content">
                 <div className="prompt-icon">📈</div>
                 <p>Provide assay replicates and run fitting to generate the validation dashboard.</p>
+                <small>Need at least 2 blanks and 3 standard points.</small>
               </div>
             </div>
           )}
