@@ -50,20 +50,58 @@ const formatSuperscript = (val: number): ReactNode => {
 };
 
 const CustomXAxisTick = ({ x, y, payload }: any) => {
-  if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>0</text>;
+  if (payload.value === 0 || isNaN(payload.value)) {
+    return (
+      <g>
+        <line x1={x} y1={y} x2={x} y2={y + 6} stroke="var(--text)" />
+        <text x={x} y={y + 18} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>0</text>
+      </g>
+    );
+  }
   const val = payload.value;
   const rawExponent = Math.log10(Math.abs(val));
   const isMajor = Math.abs(rawExponent - Math.round(rawExponent)) < 0.0001;
   
-  if (!isMajor) return null;
+  if (!isMajor) {
+    return (
+      <g>
+        <line x1={x} y1={y} x2={x} y2={y + 4} stroke="var(--text)" opacity={0.5} />
+      </g>
+    );
+  }
 
   const exponent = Math.round(rawExponent);
 
   return (
-    <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>
-      <tspan>1 × 10</tspan>
-      <tspan baselineShift="super" fontSize={8}>{exponent}</tspan>
-    </text>
+    <g>
+      <line x1={x} y1={y} x2={x} y2={y + 6} stroke="var(--text)" />
+      <text x={x} y={y + 18} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>
+        <tspan>1 × 10</tspan>
+        <tspan baselineShift="super" fontSize={8}>{exponent}</tspan>
+      </text>
+    </g>
+  );
+};
+
+const CustomYAxisTick = ({ x, y, payload, yMajorTicks }: any) => {
+  const val = payload.value;
+  const isMajor = yMajorTicks && yMajorTicks.includes(val);
+  
+  if (!isMajor) {
+    return (
+      <g>
+        <line x1={x} y1={y} x2={x - 4} y2={y} stroke="var(--text)" opacity={0.5} />
+      </g>
+    );
+  }
+
+  return (
+    <g>
+      <line x1={x} y1={y} x2={x - 6} y2={y} stroke="var(--text)" />
+      <text x={x - 10} y={y + 3} fill="var(--overlay2)" textAnchor="end" fontSize={10}>
+        {parseFloat(val.toFixed(2)).toString()}
+      </text>
+    </g>
   );
 };
 
@@ -86,13 +124,13 @@ const CustomLdLabel = ({ viewBox }: any) => {
 const CustomLegend = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', position: 'absolute', top: '16px', left: '80px', backgroundColor: 'var(--mantle)', padding: '12px', borderRadius: '8px', border: '1px solid var(--surface0)', zIndex: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', height: '2px', backgroundColor: 'var(--yellow)' }}></span> LOD</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '10px', height: '10px', backgroundColor: 'color-mix(in srgb, var(--yellow) 25%, transparent)', border: '1px solid var(--yellow)' }}></span> 95% CI LOD</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', height: '0', borderTop: '2px dashed var(--peach)' }}></span> L_C</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', height: '0', borderTop: '2px dashed var(--green)' }}></span> L_D</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', height: '2px', backgroundColor: 'var(--blue)' }}></span> Model Fit</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '10px', height: '10px', backgroundColor: 'color-mix(in srgb, var(--blue) 25%, transparent)', border: '1px solid var(--blue)' }}></span> 95% CI Fit</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ color: 'var(--red)', fontSize: '14px', lineHeight: '10px', marginLeft: '2px' }}>●</span> Measured Data</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '14px', height: '2px', backgroundColor: 'var(--yellow)' }}></span></span> LOD</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '10px', height: '10px', backgroundColor: 'color-mix(in srgb, var(--yellow) 25%, transparent)', border: '1px solid var(--yellow)' }}></span></span> 95% CI LOD</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '14px', height: '0', borderTop: '2px dashed var(--peach)' }}></span></span> L<sub>C</sub></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '14px', height: '0', borderTop: '2px dashed var(--green)' }}></span></span> L<sub>D</sub></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '14px', height: '2px', backgroundColor: 'var(--blue)' }}></span></span> Model Fit</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center' }}><span style={{ width: '10px', height: '10px', backgroundColor: 'color-mix(in srgb, var(--blue) 25%, transparent)', border: '1px solid var(--blue)' }}></span></span> 95% CI Fit</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', display: 'flex', justifyContent: 'center', color: 'var(--red)', fontSize: '14px', lineHeight: '10px' }}>●</span> Measured Data</div>
     </div>
   );
 };
@@ -250,20 +288,25 @@ function App() {
     return points;
   }, [results, blankSignals]);
 
-  const { yDomain, yTicks } = useMemo((): { yDomain: [number | 'auto', number | 'auto'], yTicks: number[] | undefined } => {
-    if (!results) return { yDomain: [0, 'auto'], yTicks: undefined };
+  const { yDomain, yTicks, yMajorTicks } = useMemo((): { yDomain: [number | 'auto', number | 'auto'], yTicks: number[] | undefined, yMajorTicks: number[] } => {
+    if (!results) return { yDomain: [0, 'auto'], yTicks: undefined, yMajorTicks: [] };
     const maxData = Math.max(...results.fit.actualY, results.ld);
     const minData = Math.min(...results.fit.actualY, 0);
     const niceMax = Math.ceil(maxData * 1.1);
     const niceMin = Math.floor(minData);
     
-    const ticks = [];
+    const majorTicks = [];
     const step = niceMax <= 5 ? 1 : Math.ceil(niceMax / 5);
     for (let i = niceMin; i <= niceMax; i += step) {
-      ticks.push(i);
+      majorTicks.push(i);
+    }
+
+    const allTicks = [];
+    for (let i = niceMin; i <= niceMax; i++) {
+      allTicks.push(i);
     }
     
-    return { yDomain: [niceMin, niceMax], yTicks: ticks };
+    return { yDomain: [niceMin, niceMax], yTicks: allTicks, yMajorTicks: majorTicks };
   }, [results]);
 
   const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
@@ -282,7 +325,7 @@ function App() {
 
   const handleCopyMetrics = () => {
     if (!results) return;
-    const text = `Bioassay Results\nLOD: ${results.lodConc.toExponential(3)}\nAICc: ${results.fit.metrics.aicc.toFixed(2)}\nR2: ${results.fit.metrics.r2.toFixed(5)}\nL_Blank: ${results.lc.toFixed(4)}\nL_Detection: ${results.ld.toFixed(4)}`;
+    const text = `Bioassay Results\nLOD: ${results.lodConc.toExponential(3)}\nAICc: ${results.fit.metrics.aicc.toFixed(2)}\nR2: ${results.fit.metrics.r2.toFixed(5)}\nLC: ${results.lc.toFixed(4)}\nLD: ${results.ld.toFixed(4)}`;
     navigator.clipboard.writeText(text);
     alert('Metrics copied to clipboard!');
   };
@@ -291,7 +334,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay LOD Fitter v10.8.1</h1>
+          <h1>Bioassay LOD Fitter v10.8.2</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -361,6 +404,7 @@ function App() {
                       <XAxis 
                         dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="var(--text)" 
                         ticks={xTicks}
+                        tickLine={false}
                         tick={<CustomXAxisTick />}
                         label={{ value: xAxisLabel, position: 'bottom', fill: 'var(--overlay2)', fontSize: 11, offset: 25 }}
                       />
@@ -369,7 +413,8 @@ function App() {
                         domain={yDomain} 
                         ticks={yTicks}
                         allowDataOverflow={true}
-                        tickFormatter={(val) => parseFloat(val.toFixed(2)).toString()}
+                        tickLine={false}
+                        tick={<CustomYAxisTick yMajorTicks={yMajorTicks} />}
                         label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: 'var(--overlay2)', fontSize: 11, offset: -5 }} 
                       />
                       <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: 'var(--surface0)', borderRadius: '8px', fontSize: '12px' }} />
@@ -414,13 +459,13 @@ function App() {
                   <div className="stat-row"><span className="stat-label">Blank Mean</span><span className="stat-value">{results.meanBlank.toFixed(4)}</span></div>
                   <div className="stat-row"><span className="stat-label">Blank SD</span><span className="stat-value">{results.sdBlank.toFixed(4)}</span></div>
                   <div className="stat-row"><span className="stat-label">Pooled SD</span><span className="stat-value">{results.sdPooled.toFixed(4)}</span></div>
-                  <div className="stat-row"><span className="stat-label">L_Blank (L<sub>C</sub>)</span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
-                  <div className="stat-row"><span className="stat-label">L_Detection (L<sub>D</sub>)</span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label">L<sub>C</sub></span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label">L<sub>D</sub></span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.1...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.2...</p></div>
           )}
         </section>
       </main>
