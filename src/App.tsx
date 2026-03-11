@@ -25,22 +25,25 @@ interface StandardRow {
   signals: string;
 }
 
+const DEFAULT_BLANKS = '0.05, 0.06, 0.04, 0.05, 0.05';
+const DEFAULT_STANDARDS: StandardRow[] = [
+  { id: '1', conc: '0.001', signals: '0.12, 0.15, 0.10, 0.13, 0.11' },
+  { id: '2', conc: '0.003', signals: '0.14, 0.17, 0.13, 0.15, 0.16' },
+  { id: '3', conc: '0.01', signals: '0.18, 0.22, 0.19, 0.20, 0.21' },
+  { id: '4', conc: '0.03', signals: '0.30, 0.35, 0.28, 0.32, 0.31' },
+  { id: '5', conc: '0.1', signals: '0.58, 0.65, 0.55, 0.61, 0.59' },
+  { id: '6', conc: '0.3', signals: '1.35, 1.48, 1.30, 1.40, 1.38' },
+  { id: '7', conc: '1', signals: '3.10, 3.28, 3.05, 3.18, 3.12' },
+  { id: '8', conc: '3', signals: '4.20, 4.35, 4.15, 4.28, 4.22' },
+  { id: '9', conc: '10', signals: '4.62, 4.78, 4.55, 4.70, 4.65' },
+  { id: '10', conc: '30', signals: '4.80, 4.92, 4.76, 4.85, 4.82' },
+  { id: '11', conc: '100', signals: '4.88, 4.98, 4.84, 4.90, 4.86' },
+  { id: '12', conc: '300', signals: '4.92, 5.02, 4.88, 4.95, 4.94' },
+];
+
 function App() {
-  const [blankSignals, setBlankSignals] = useState('0.05, 0.06, 0.04, 0.05, 0.05');
-  const [standardRows, setStandardRows] = useState<StandardRow[]>([
-    { id: '1', conc: '0.001', signals: '0.12, 0.15, 0.10, 0.13, 0.11' },
-    { id: '2', conc: '0.003', signals: '0.14, 0.17, 0.13, 0.15, 0.16' },
-    { id: '3', conc: '0.01', signals: '0.18, 0.22, 0.19, 0.20, 0.21' },
-    { id: '4', conc: '0.03', signals: '0.30, 0.35, 0.28, 0.32, 0.31' },
-    { id: '5', conc: '0.1', signals: '0.58, 0.65, 0.55, 0.61, 0.59' },
-    { id: '6', conc: '0.3', signals: '1.35, 1.48, 1.30, 1.40, 1.38' },
-    { id: '7', conc: '1', signals: '3.10, 3.28, 3.05, 3.18, 3.12' },
-    { id: '8', conc: '3', signals: '4.20, 4.35, 4.15, 4.28, 4.22' },
-    { id: '9', conc: '10', signals: '4.62, 4.78, 4.55, 4.70, 4.65' },
-    { id: '10', conc: '30', signals: '4.80, 4.92, 4.76, 4.85, 4.82' },
-    { id: '11', conc: '100', signals: '4.88, 4.98, 4.84, 4.90, 4.86' },
-    { id: '12', conc: '300', signals: '4.92, 5.02, 4.88, 4.95, 4.94' },
-  ]);
+  const [blankSignals, setBlankSignals] = useState(DEFAULT_BLANKS);
+  const [standardRows, setStandardRows] = useState<StandardRow[]>(DEFAULT_STANDARDS);
   const [fitMethod, setFitMethod] = useState<'linear' | '4pl' | '5pl' | 'auto'>('auto');
   
   const results = useMemo(() => {
@@ -65,24 +68,12 @@ function App() {
       });
 
       if (blanks.length < 2 || standards.length < 3) return null;
-
       return calculateAdvancedLoD(blanks, standards, fitMethod);
     } catch (e) {
+      console.error('Calculation error:', e);
       return null;
     }
   }, [blankSignals, standardRows, fitMethod]);
-
-  const addRow = () => {
-    setStandardRows([...standardRows, { id: Math.random().toString(36), conc: '', signals: '' }]);
-  };
-
-  const removeRow = (id: string) => {
-    setStandardRows(standardRows.filter(r => r.id !== id));
-  };
-
-  const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
-    setStandardRows(standardRows.map(r => r.id === id ? { ...r, [field]: value } : r));
-  };
 
   const chartData = useMemo(() => {
     if (!results) return { trend: [], actual: [] };
@@ -94,7 +85,7 @@ function App() {
     
     const steps = 100;
     const logMin = Math.log10(minX || 0.0001);
-    const logMax = Math.log10(maxX * 1.5);
+    const logMax = Math.log10(maxX * 1.2);
     const stepSize = (logMax - logMin) / steps;
 
     for (let i = 0; i <= steps; i++) {
@@ -110,27 +101,33 @@ function App() {
     return { trend: trendPoints, actual: actualPoints };
   }, [results]);
 
+  const addRow = () => setStandardRows([...standardRows, { id: Math.random().toString(36), conc: '', signals: '' }]);
+  const removeRow = (id: string) => setStandardRows(standardRows.filter(r => r.id !== id));
+  const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
+    setStandardRows(standardRows.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
   return (
     <div className="app-wrapper">
       <header>
         <div className="header-content">
           <h1>Bioassay Curve Fitter & LoD Validator</h1>
-          <p className="header-description">Precision regression and clinical validation suite. Real-time reactive analysis.</p>
+          <p className="header-description">Advanced non-linear regression suite for diagnostic assay validation.</p>
         </div>
       </header>
 
       <main className="main-container">
         <aside className="sidebar">
           <section className="sidebar-section">
-            <span className="section-title">Model Configuration</span>
+            <span className="section-title">Model Config</span>
             <div className="input-group">
-              <label className="input-label">Fitting Method</label>
+              <label className="input-label">Regression Method</label>
               <select 
                 value={fitMethod} 
                 onChange={(e) => setFitMethod(e.target.value as any)}
                 className="method-select"
               >
-                <option value="auto">Automatic (Best Fit)</option>
+                <option value="auto">Auto (4PL/5PL Optimization)</option>
                 <option value="4pl">4-Parameter Logistic</option>
                 <option value="5pl">5-Parameter Logistic</option>
                 <option value="linear">Linear Regression</option>
@@ -139,10 +136,10 @@ function App() {
           </section>
 
           <section className="sidebar-section">
-            <span className="section-title">1. Negative Controls (Blanks)</span>
+            <span className="section-title">1. Background (Blanks)</span>
             <div className="data-table-header">
               <div className="col-label">Conc.</div>
-              <div className="col-label">Signals (replicates)</div>
+              <div className="col-label">Signal Replicates</div>
             </div>
             <div className="data-row locked">
               <div className="conc-input disabled">0</div>
@@ -150,16 +147,16 @@ function App() {
                 className="signals-input"
                 value={blankSignals}
                 onChange={(e) => setBlankSignals(e.target.value)}
-                placeholder="0.1, 0.12..."
+                placeholder="e.g. 0.05, 0.06..."
               />
             </div>
           </section>
 
           <section className="sidebar-section">
-            <span className="section-title">2. Standard Curve Data</span>
+            <span className="section-title">2. Calibration Standards</span>
             <div className="data-table-header">
               <div className="col-label">Conc.</div>
-              <div className="col-label">Signals (replicates)</div>
+              <div className="col-label">Signal Replicates</div>
             </div>
             <div className="rows-container">
               {standardRows.map((row) => (
@@ -169,19 +166,17 @@ function App() {
                     className="conc-input"
                     value={row.conc}
                     onChange={(e) => updateRow(row.id, 'conc', e.target.value)}
-                    placeholder="0.0"
                   />
                   <textarea
                     className="signals-input"
                     value={row.signals}
                     onChange={(e) => updateRow(row.id, 'signals', e.target.value)}
-                    placeholder="Values..."
                   />
                   <button className="remove-row-btn" onClick={() => removeRow(row.id)}>×</button>
                 </div>
               ))}
             </div>
-            <button className="add-row-btn" onClick={addRow}>+ Add Concentration Point</button>
+            <button className="add-row-btn" onClick={addRow}>+ Add Concentration</button>
           </section>
         </aside>
 
@@ -190,40 +185,40 @@ function App() {
             <div className="dashboard-grid">
               <div className="chart-card">
                 <div className="chart-header">
-                  <h2>Regression Analysis</h2>
+                  <h2>Dose-Response Profile</h2>
                   <div className="chart-badges">
-                    <span className="method-badge">{results.fit.method.toUpperCase()} Fit</span>
-                    {results.fit.metrics.r2 > 0.99 && <span className="quality-badge">High Precision</span>}
+                    <span className="method-badge">{results.fit.method.toUpperCase()} Optimized</span>
+                    {results.fit.metrics.r2 > 0.99 && <span className="quality-badge">Excellent Fit</span>}
                   </div>
                 </div>
                 <div className="chart-frame">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart margin={{ top: 10, right: 30, left: 10, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="2 2" stroke="#313244" vertical={false} />
+                    <ComposedChart margin={{ top: 10, right: 30, left: 10, bottom: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
                       <XAxis 
                         dataKey="x" 
                         type="number" 
                         scale="log" 
                         domain={['auto', 'auto']}
                         stroke="#cdd6f4" 
-                        tick={{ fontSize: 10 }}
-                        label={{ value: 'Concentration (log)', position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 15 }}
+                        tick={{ fontSize: 11 }}
+                        label={{ value: 'Analyte Concentration (log)', position: 'bottom', fill: '#9399b2', fontSize: 12, offset: 25 }}
                       />
                       <YAxis 
                         stroke="#cdd6f4" 
-                        tick={{ fontSize: 10 }}
-                        label={{ value: 'Signal Intensity', angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11 }}
+                        tick={{ fontSize: 11 }}
+                        label={{ value: 'Signal Intensity', angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 12 }}
                       />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '4px', fontSize: '11px' }}
+                        contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px' }}
                       />
-                      <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }}/>
+                      <Legend verticalAlign="top" height={36} iconType="circle" />
                       <Line
                         data={chartData.trend}
                         type="monotone"
                         dataKey="trend"
                         stroke="#89b4fa"
-                        strokeWidth={2.5}
+                        strokeWidth={3}
                         dot={false}
                         name="Model Fit"
                         isAnimationActive={false}
@@ -231,16 +226,16 @@ function App() {
                       <Scatter 
                         data={chartData.actual} 
                         fill="#f38ba8" 
-                        name="Standard Replicates"
+                        name="Replicates"
                       />
                       <Line
-                        data={[{ x: 0.000001, y: results.ld }, { x: 1000000, y: results.ld }]}
+                        data={[{ x: 1e-6, y: results.ld }, { x: 1e6, y: results.ld }]}
                         dataKey="y"
                         stroke="#a6e3a1"
-                        strokeDasharray="4 4"
+                        strokeDasharray="6 4"
                         name="Ld Threshold"
                         dot={false}
-                        strokeWidth={1.5}
+                        strokeWidth={2}
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -249,15 +244,15 @@ function App() {
 
               <div className="results-side-panel">
                 <div className="lod-hero-card">
-                  <label>Validated LoD</label>
-                  <div className="lod-hero-value">{results.lodConc.toExponential(3)}</div>
+                  <label>Validated Limit of Detection</label>
+                  <div className="lod-hero-value">{results.lodConc < 0.01 ? results.lodConc.toExponential(3) : results.lodConc.toFixed(4)}</div>
                   <span className="lod-hero-unit">Concentration Units</span>
                 </div>
 
                 <div className="stats-card">
-                  <h3>Performance</h3>
+                  <h3>Metrics</h3>
                   <div className="stat-row">
-                    <span className="stat-label">R² (CoD)</span>
+                    <span className="stat-label">R² Coefficient</span>
                     <span className="stat-value">{results.fit.metrics.r2.toFixed(5)}</span>
                   </div>
                   <div className="stat-row">
@@ -271,7 +266,7 @@ function App() {
                 </div>
 
                 <div className="stats-card">
-                  <h3>Optimized Fit</h3>
+                  <h3>Model Parameters</h3>
                   {Object.entries(results.fit.parameters).map(([name, val]: any) => (
                     <div className="stat-row" key={name}>
                       <span className="stat-label">{name}</span>
@@ -284,9 +279,9 @@ function App() {
           ) : (
             <div className="empty-prompt">
               <div className="prompt-content">
-                <div className="prompt-icon">📈</div>
-                <p>Awaiting valid assay replicates...</p>
-                <small>Need blanks (conc 0) and at least 3 standard points.</small>
+                <div className="prompt-icon">🧪</div>
+                <p>Awaiting valid assay data inputs...</p>
+                <small>Requires background signals and standard replicates.</small>
               </div>
             </div>
           )}

@@ -16,7 +16,9 @@ export interface FitResult {
 
 export const calculateAICc = (rss: number, n: number, k: number): number => {
   if (n <= k + 1) return Infinity;
-  const aic = n * Math.log(rss / n) + 2 * k;
+  // Use a small constant to prevent log(0) if RSS is extremely small
+  const safeRss = Math.max(rss, 1e-15);
+  const aic = n * Math.log(safeRss / n) + 2 * k;
   return aic + (2 * k * (k + 1)) / (n - k - 1);
 };
 
@@ -24,7 +26,7 @@ export const calculateR2 = (actual: number[], predicted: number[]): number => {
   const mean = actual.reduce((a, b) => a + b, 0) / actual.length;
   const ssRes = actual.reduce((a, b, i) => a + Math.pow(b - predicted[i], 2), 0);
   const ssTot = actual.reduce((a, b) => a + Math.pow(b - mean, 2), 0);
-  return ssTot === 0 ? 0 : 1 - ssRes / ssTot;
+  return ssTot === 0 ? 1 : 1 - ssRes / ssTot;
 };
 
 const models = {
@@ -40,8 +42,21 @@ const models = {
       return d + (a - d) / (1 + Math.pow(x / c, b));
     },
     k: 4,
-    paramNames: ['Bottom (a)', 'Slope (b)', 'EC50 (c)', 'Top (d)'],
-    initialValues: (x: number[], y: number[]) => [Math.min(...y), 1, (Math.min(...x) + Math.max(...x)) / 2, Math.max(...y)]
+    paramNames: ['Bottom (a)', 'Hill Slope (b)', 'EC50 (c)', 'Top (d)'],
+    initialValues: (x: number[], y: number[]) => {
+      const midY = (Math.min(...y) + Math.max(...y)) / 2;
+      // Find x closest to midY for better EC50 estimate
+      let closestX = x[Math.floor(x.length / 2)];
+      let minDiff = Infinity;
+      x.forEach((val, i) => {
+        const diff = Math.abs(y[i] - midY);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestX = val;
+        }
+      });
+      return [Math.min(...y), 1, closestX, Math.max(...y)];
+    }
   },
   '5pl': {
     func: (x: number, [a, b, c, d, g]: number[]) => {
@@ -49,8 +64,20 @@ const models = {
       return d + (a - d) / Math.pow(1 + Math.pow(x / c, b), g);
     },
     k: 5,
-    paramNames: ['Bottom (a)', 'Slope (b)', 'EC50 (c)', 'Top (d)', 'Asymmetry (g)'],
-    initialValues: (x: number[], y: number[]) => [Math.min(...y), 1, (Math.min(...x) + Math.max(...x)) / 2, Math.max(...y), 1]
+    paramNames: ['Bottom (a)', 'Hill Slope (b)', 'EC50 (c)', 'Top (d)', 'Asymmetry (g)'],
+    initialValues: (x: number[], y: number[]) => {
+      const midY = (Math.min(...y) + Math.max(...y)) / 2;
+      let closestX = x[Math.floor(x.length / 2)];
+      let minDiff = Infinity;
+      x.forEach((val, i) => {
+        const diff = Math.abs(y[i] - midY);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestX = val;
+        }
+      });
+      return [Math.min(...y), 1, closestX, Math.max(...y), 1];
+    }
   }
 };
 
@@ -74,14 +101,21 @@ export const fitData = (
     params = [m, b];
     rss = x.reduce((sum, xi, i) => sum + Math.pow(y[i] - (m * xi + b), 2), 0);
   } else {
-    const options = {
-      initialValues: model.initialValues(x, y),
-      maxIterations: 1000,
-    };
+    try {
+      const options = {
+        initialValues: model.initialValues(x, y),
+        maxIterations: 2000,
+        damping: 1.5,
+      };
 
-    const result = levenbergMarquardt({ x, y }, (p: number[]) => (x: number) => model.func(x, p), options);
-    params = result.parameterValues;
-    rss = result.parameterError;
+      const result = levenbergMarquardt({ x, y }, (p: number[]) => (x: number) => model.func(x, p), options);
+      params = result.parameterValues;
+      rss = result.parameterError;
+    } catch (e) {
+      // Fallback if LM fails
+      params = model.k === 4 ? [Math.min(...y), 1, x[Math.floor(n/2)], Math.max(...y)] : [Math.min(...y), 1, x[Math.floor(n/2)], Math.max(...y), 1];
+      rss = 1e9;
+    }
   }
 
   const predicted = x.map(val => model.func(val, params));
@@ -109,6 +143,7 @@ export const autoFit = (x: number[], y: number[]): FitResult => {
   const fit4 = fitData(x, y, '4pl');
   const fit5 = fitData(x, y, '5pl');
 
+  // Parsimony: Choose 4PL if 5PL isn't significantly better
   if (fit5.metrics.aicc < fit4.metrics.aicc - 2) {
     return fit5;
   }
