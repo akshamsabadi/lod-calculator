@@ -27,54 +27,84 @@
   --mantle: #181825;
   --crust: #11111b;
 
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  background-color: var(--base);
+  background-color: var(--crust);
   color: var(--text);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden; /* App-like feel */
 }
 
 #root {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  height: 100%;
 }
 
-h1 { color: var(--mauve); margin-bottom: 5px; }
-.subtitle { color: var(--subtext0); margin-bottom: 30px; font-style: italic; }
-
-.main-layout {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 30px;
-}
-
-@media (max-width: 900px) {
-  .main-layout { grid-template-columns: 1fr; }
-}
-
-.sidebar {
+.app-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  height: 100vh;
 }
 
-.input-card {
-  background: var(--mantle);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--surface0);
-  text-align: left;
+header {
+  background-color: var(--mantle);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--surface0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.input-card h3 {
-  margin-top: 0;
-  font-size: 1rem;
-  color: var(--lavender);
-  margin-bottom: 15px;
+header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--mauve);
+  font-weight: 700;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar Styling - Inspiration from AssayCurveFit */
+.sidebar {
+  width: 380px;
+  background-color: var(--mantle);
+  border-right: 1px solid var(--surface0);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--overlay2);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  font-size: 0.9rem;
+  color: var(--subtext1);
 }
 
 .method-select {
@@ -84,7 +114,7 @@ h1 { color: var(--mauve); margin-bottom: 5px; }
   color: var(--text);
   border: 1px solid var(--surface1);
   border-radius: 8px;
-  cursor: pointer;
+  outline: none;
 }
 
 textarea {
@@ -95,110 +125,159 @@ textarea {
   padding: 12px;
   color: var(--text);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   resize: vertical;
+  min-height: 80px;
+}
+
+textarea:focus {
+  border-color: var(--blue);
 }
 
 .calc-btn {
   background: var(--blue);
   color: var(--crust);
   border: none;
-  padding: 15px;
-  border-radius: 12px;
+  padding: 14px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
+  margin-top: 10px;
 }
 
-.calc-btn:hover { background: var(--sapphire); transform: translateY(-2px); }
+.calc-btn:hover {
+  background: var(--sapphire);
+  transform: translateY(-1px);
+}
 
-.content {
-  background: var(--mantle);
-  padding: 30px;
-  border-radius: 16px;
+/* Dashboard Content Area */
+.content-area {
+  flex: 1;
+  padding: 24px;
+  background-color: var(--base);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.chart-card {
+  background-color: var(--mantle);
+  border-radius: 12px;
+  padding: 24px;
   border: 1px solid var(--surface0);
-  min-height: 400px;
+  flex: 1;
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-container {
-  background: var(--crust);
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-}
-
-.results-grid-advanced {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.metrics-card {
-  background: var(--surface0);
-  padding: 20px;
-  border-radius: 12px;
-  text-align: left;
-}
-
-.metrics-card h4 {
-  margin-top: 0;
-  color: var(--peach);
-  margin-bottom: 15px;
-  border-bottom: 1px solid var(--surface1);
-  padding-bottom: 8px;
-}
-
-.metric-row {
+.chart-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--lavender);
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.stats-card {
+  background-color: var(--mantle);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--surface0);
+}
+
+.stats-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: var(--peach);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface0);
   font-size: 0.9rem;
 }
 
-.metric-row span { color: var(--subtext1); }
-.metric-row strong { color: var(--text); }
+.stat-row:last-child {
+  border-bottom: none;
+}
 
-.final-lod-card {
-  background: rgba(166, 227, 161, 0.1);
-  border: 2px solid var(--green);
-  padding: 20px;
+.stat-label {
+  color: var(--subtext0);
+}
+
+.stat-value {
+  color: var(--text);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.lod-hero-card {
+  background: linear-gradient(135deg, rgba(166, 227, 161, 0.1), rgba(148, 226, 213, 0.05));
+  border: 1px solid var(--green);
   border-radius: 12px;
+  padding: 24px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
 }
 
-.final-lod-card label {
+.lod-hero-card label {
   color: var(--green);
-  text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.8rem;
-  letter-spacing: 1px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
 }
 
-.lod-value {
-  font-size: 2.5rem;
+.lod-hero-value {
+  font-size: 3rem;
   font-weight: 900;
   color: var(--green);
+  line-height: 1;
 }
 
-.final-lod-card small { color: var(--overlay2); }
-
-.error {
-  color: var(--red);
-  background: rgba(243, 139, 168, 0.1);
-  padding: 12px;
-  border-radius: 8px;
+.lod-hero-unit {
+  color: var(--overlay2);
+  margin-top: 8px;
   font-size: 0.9rem;
 }
 
-.empty-state {
-  display: flex;
+.empty-prompt {
   height: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
   color: var(--overlay0);
   font-style: italic;
+  font-size: 1.1rem;
+}
+
+.error-toast {
+  background-color: var(--red);
+  color: var(--crust);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 10px;
 }

@@ -27,7 +27,7 @@ interface ChartData {
 function App() {
   const [blanksInput, setBlanksInput] = useState('0.1, 0.12, 0.09, 0.11, 0.1');
   const [standardsInput, setStandardsInput] = useState('1:0.2, 5:0.8, 10:1.5, 50:6.2, 100:11.8');
-  const [fitMethod, setFitMethod] = useState<'linear' | '4pl'>('linear');
+  const [fitMethod, setFitMethod] = useState<'linear' | '4pl'>('4pl');
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState('');
 
@@ -46,131 +46,131 @@ function App() {
         .filter(s => s !== '')
         .map(pair => {
           const parts = pair.split(':');
-          if (parts.length !== 2) throw new Error('Invalid pair');
+          if (parts.length !== 2) throw new Error('Invalid format. Use Conc:Signal');
           const [conc, readout] = parts.map(Number);
           return { concentration: conc, readout: readout };
         });
 
       if (blanks.some(isNaN) || standards.some(s => isNaN(s.concentration) || isNaN(s.readout))) {
-        throw new Error('Invalid numbers');
-      }
-
-      if (blanks.length < 2 || standards.length < 3) {
-        throw new Error('Insufficient data points (need >=3 standards for fitting)');
+        throw new Error('Data must be numbers');
       }
 
       const res = calculateAdvancedLoD(blanks, standards, fitMethod);
       setResults(res);
     } catch (err: any) {
-      setError(err.message || 'Check your input format.');
+      setError(err.message || 'Check your inputs');
     }
   };
 
   const chartData = useMemo((): ChartData => {
     if (!results) return { trend: [], actual: [] };
     
-    const standards: StandardData[] = standardsInput
-      .split(',')
-      .map(s => {
-        const parts = s.trim().split(':');
-        if (parts.length !== 2) return { concentration: NaN, readout: NaN };
-        const [conc, readout] = parts.map(Number);
-        return { concentration: conc, readout: readout };
-      })
-      .filter(s => !isNaN(s.concentration));
-
-    const minX = Math.min(...standards.map(s => s.concentration));
-    const maxX = Math.max(...standards.map(s => s.concentration));
+    const xValues = results.fit.actualX;
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
     const trendPoints: ChartPoint[] = [];
     
-    const steps = 50;
-    const stepSize = (maxX - minX) / steps;
+    const steps = 100;
+    const logMin = Math.log10(minX || 0.1);
+    const logMax = Math.log10(maxX);
+    const stepSize = (logMax - logMin) / steps;
+
     for (let i = 0; i <= steps; i++) {
-      const x = minX + i * stepSize;
-      trendPoints.push({
-        x,
-        trend: results.fit.predict(x),
-      });
+      const x = Math.pow(10, logMin + i * stepSize);
+      trendPoints.push({ x, trend: results.fit.predict(x) });
     }
 
-    const actualPoints: ChartPoint[] = standards.map(s => ({
-      x: s.concentration,
-      y: s.readout,
+    const actualPoints: ChartPoint[] = xValues.map((vx: number, i: number) => ({
+      x: vx,
+      y: results.fit.actualY[i],
     }));
 
     return { trend: trendPoints, actual: actualPoints };
-  }, [results, standardsInput]);
-
-  const maxActualX = useMemo(() => {
-    if (chartData.actual.length === 0) return 100;
-    return Math.max(...chartData.actual.map((p: any) => p.x));
-  }, [chartData]);
+  }, [results]);
 
   return (
-    <div className="container">
-      <h1>Assay Validation Suite</h1>
-      <p className="subtitle">High-Precision LoD Fitting & Curve Analysis</p>
-      
-      <div className="main-layout">
-        <div className="sidebar">
-          <section className="input-card">
-            <h3>Fitting Model</h3>
-            <select 
-              value={fitMethod} 
-              onChange={(e) => setFitMethod(e.target.value as any)}
-              className="method-select"
-            >
-              <option value="linear">Linear Regression (y=mx+b)</option>
-              <option value="4pl">4-Parameter Logistic (4PL)</option>
-            </select>
-          </section>
-
-          <section className="input-card">
-            <h3>1. Blank Samples</h3>
-            <textarea
-              value={blanksInput}
-              onChange={(e) => setBlanksInput(e.target.value)}
-              placeholder="e.g. 0.1, 0.12..."
-              rows={3}
-            />
-          </section>
-
-          <section className="input-card">
-            <h3>2. Standards (Conc : Signal)</h3>
-            <textarea
-              value={standardsInput}
-              onChange={(e) => setStandardsInput(e.target.value)}
-              placeholder="e.g. 10:1.2, 50:4.5..."
-              rows={5}
-            />
-          </section>
-
-          <button className="calc-btn" onClick={handleCalculate}>Fit Curve & Calculate LoD</button>
-          {error && <div className="error">{error}</div>}
+    <div className="app-wrapper">
+      <header>
+        <h1>Bioassay Validation Engine</h1>
+        <div className="header-actions">
+          <small style={{ color: 'var(--subtext0)' }}>Precision LoD Analysis v2.0</small>
         </div>
+      </header>
 
-        <div className="content">
+      <main className="main-container">
+        <aside className="sidebar">
+          <div className="sidebar-section">
+            <span className="section-title">Model Configuration</span>
+            <div className="input-group">
+              <label className="input-label">Fitting Method</label>
+              <select 
+                value={fitMethod} 
+                onChange={(e) => setFitMethod(e.target.value as any)}
+                className="method-select"
+              >
+                <option value="linear">Linear Regression</option>
+                <option value="4pl">4-Parameter Logistic (4PL)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="sidebar-section">
+            <span className="section-title">Data Entry</span>
+            <div className="input-group">
+              <label className="input-label">Negative Controls (Signal)</label>
+              <textarea
+                value={blanksInput}
+                onChange={(e) => setBlanksInput(e.target.value)}
+                placeholder="0.1, 0.12, 0.09..."
+              />
+            </div>
+            <div className="input-group" style={{ marginTop: '16px' }}>
+              <label className="input-label">Standard Curve (Conc : Signal)</label>
+              <textarea
+                value={standardsInput}
+                onChange={(e) => setStandardsInput(e.target.value)}
+                placeholder="10:1.2, 50:4.5..."
+                style={{ minHeight: '140px' }}
+              />
+            </div>
+          </div>
+
+          <button className="calc-btn" onClick={handleCalculate}>
+            Run Validation Fit
+          </button>
+          
+          {error && <div className="error-toast">{error}</div>}
+        </aside>
+
+        <section className="content-area">
           {results ? (
             <>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={350}>
-                  <ComposedChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#313244" />
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h2>Assay Standard Curve & LoD Threshold</h2>
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
                     <XAxis 
                       dataKey="x" 
                       type="number" 
-                      name="Concentration" 
-                      stroke="#cdd6f4"
-                      label={{ value: 'Concentration', position: 'bottom', fill: '#cdd6f4' }}
+                      scale="log" 
+                      domain={['auto', 'auto']}
+                      stroke="#cdd6f4" 
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Concentration (log scale)', position: 'bottom', fill: '#9399b2', fontSize: 13, offset: -5 }}
                     />
                     <YAxis 
-                      stroke="#cdd6f4"
-                      label={{ value: 'Signal', angle: -90, position: 'insideLeft', fill: '#cdd6f4' }}
+                      stroke="#cdd6f4" 
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Signal Intensity', angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 13 }}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', color: '#cdd6f4' }}
+                      contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px' }}
+                      itemStyle={{ fontSize: '12px' }}
                     />
-                    <Legend />
+                    <Legend verticalAlign="top" height={36}/>
                     <Line
                       data={chartData.trend}
                       type="monotone"
@@ -178,66 +178,68 @@ function App() {
                       stroke="#89b4fa"
                       strokeWidth={3}
                       dot={false}
-                      name="Fitted Curve"
+                      name="Model Fit"
+                      animationDuration={1000}
                     />
                     <Scatter 
                       data={chartData.actual} 
                       fill="#f38ba8" 
-                      name="Measured Standards"
+                      name="Standard Replicates"
                     />
                     <Line
-                      data={[{ x: 0, y: results.ld }, { x: maxActualX, y: results.ld }]}
+                      data={[{ x: 0.0001, y: results.ld }, { x: 100000, y: results.ld }]}
                       dataKey="y"
                       stroke="#a6e3a1"
-                      strokeDasharray="5 5"
-                      name="Signal LoD (Ld)"
+                      strokeDasharray="6 4"
+                      name="Ld Threshold"
                       dot={false}
+                      strokeWidth={2}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="results-grid-advanced">
-                <div className="metrics-card">
-                  <h4>Fit Metrics</h4>
-                  <div className="metric-row">
-                    <span>R² Value</span>
-                    <strong>{results.fit.metrics.r2.toFixed(4)}</strong>
+              <div className="stats-container">
+                <div className="stats-card">
+                  <h3>Model Statistics</h3>
+                  <div className="stat-row">
+                    <span className="stat-label">R-Squared (CoD)</span>
+                    <span className="stat-value">{results.fit.metrics.r2.toFixed(4)}</span>
                   </div>
-                  <div className="metric-row">
-                    <span>RMSE</span>
-                    <strong>{results.fit.metrics.rmse.toFixed(4)}</strong>
+                  <div className="stat-row">
+                    <span className="stat-label">Root Mean Sq. Error</span>
+                    <span className="stat-value">{results.fit.metrics.rmse.toFixed(4)}</span>
                   </div>
-                  <div className="metric-row">
-                    <span>AICc</span>
-                    <strong>{results.fit.metrics.aicc.toFixed(2)}</strong>
+                  <div className="stat-row">
+                    <span className="stat-label">AICc (Corrected)</span>
+                    <span className="stat-value">{results.fit.metrics.aicc.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="metrics-card">
-                  <h4>Fit Parameters</h4>
+                <div className="stats-card">
+                  <h3>Optimized Parameters</h3>
                   {Object.entries(results.fit.parameters).map(([name, val]: any) => (
-                    <div className="metric-row" key={name}>
-                      <span>{name}</span>
-                      <strong>{val.toFixed(4)}</strong>
+                    <div className="stat-row" key={name}>
+                      <span className="stat-label">{name}</span>
+                      <span className="stat-value">{val.toFixed(4)}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="final-lod-card">
-                  <label>Validated LoD</label>
-                  <div className="lod-value">{results.lodConc.toFixed(4)}</div>
-                  <small>Concentration Units</small>
+                <div className="lod-hero-card">
+                  <label>Validated Limit of Detection</label>
+                  <div className="lod-hero-value">{results.lodConc.toFixed(4)}</div>
+                  <span className="lod-hero-unit">Concentration Units</span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="empty-state">
-              <p>Enter your data and click calculate to generate fitting analysis.</p>
+            <div className="empty-prompt">
+              <p>← Provide assay data and run fit to view validation dashboard</p>
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

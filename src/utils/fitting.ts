@@ -9,6 +9,8 @@ export interface FitResult {
     aicc: number;
   };
   predict: (x: number) => number;
+  actualX: number[];
+  actualY: number[];
 }
 
 export const calculateAICc = (rss: number, n: number, k: number): number => {
@@ -36,7 +38,7 @@ const models = {
       return d + (a - d) / (1 + Math.pow(x / c, b));
     },
     k: 4,
-    paramNames: ['Bottom (a)', 'Slope (b)', 'EC50 (c)', 'Top (d)'],
+    paramNames: ['Bottom (a)', 'Hill Slope (b)', 'EC50 (c)', 'Top (d)'],
   }
 };
 
@@ -70,10 +72,9 @@ export const fitData = (
       maxIterations: 1000,
     };
 
-    // ParameterizedFunction: (params) => (x) => y
     const result = levenbergMarquardt({ x, y }, (p: number[]) => (x: number) => model.func(x, p), options);
     params = result.parameterValues;
-    rss = result.parameterError; // This is actually SSE (Sum of Squared Errors) in this library
+    rss = result.parameterError;
   }
 
   const predicted = x.map(val => model.func(val, params));
@@ -91,5 +92,7 @@ export const fitData = (
     parameters,
     metrics: { rmse, r2, aicc },
     predict: (val: number) => model.func(val, params),
+    actualX: x,
+    actualY: y
   };
 };
