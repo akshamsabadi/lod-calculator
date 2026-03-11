@@ -98,7 +98,7 @@ const CustomYAxisTick = ({ x, y, payload }: any) => {
 const CustomLcLabel = ({ viewBox }: any) => {
   return (
     <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="var(--peach)" fontSize={10}>
-      L<tspan dy={3} fontSize={8}>C</tspan>
+      L<tspan dy="0.3em" fontSize={7.5}>C</tspan>
     </text>
   );
 };
@@ -106,7 +106,7 @@ const CustomLcLabel = ({ viewBox }: any) => {
 const CustomLdLabel = ({ viewBox }: any) => {
   return (
     <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="var(--green)" fontSize={10}>
-      L<tspan dy={3} fontSize={8}>D</tspan>
+      L<tspan dy="0.3em" fontSize={7.5}>D</tspan>
     </text>
   );
 };
@@ -327,7 +327,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay LOD Fitter v10.8.7</h1>
+          <h1>Bioassay LOD Fitter v10.8.8</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -453,28 +453,28 @@ function App() {
                     <h3 style={{ margin: 0 }}>Curve Fitting</h3>
                     <button className="action-btn" onClick={handleCopyMetrics} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>Copy</button>
                   </div>
-                  <div className="stat-row" title="Akaike Information Criterion (corrected). Lower is better."><span className="stat-label" style={{ cursor: 'help' }}>AICc Score</span><span className="stat-value">{results.fit.metrics.aicc.toFixed(2)}</span></div>
-                  <div className="stat-row" title="Coefficient of determination. Closer to 1 is better."><span className="stat-label" style={{ cursor: 'help' }}>R² (Fit)</span><span className="stat-value">{results.fit.metrics.r2.toFixed(5)}</span></div>
-                  <div className="stat-row" title="Lower asymptote (background signal)"><span className="stat-label" style={{ cursor: 'help' }}>Bottom (a)</span><span className="stat-value">{results.fit.parameters['Bottom (a)']?.toFixed(4) || 'N/A'}</span></div>
-                  <div className="stat-row" title="Steepness of the curve"><span className="stat-label" style={{ cursor: 'help' }}>Hill Slope (b)</span><span className="stat-value">{results.fit.parameters['Hill Slope (b)']?.toFixed(4) || 'N/A'}</span></div>
-                  <div className="stat-row" title="Concentration at half-maximal response"><span className="stat-label" style={{ cursor: 'help' }}>EC50 (c)</span><span className="stat-value">{results.fit.parameters['EC50 (c)']?.toFixed(4) || 'N/A'}</span></div>
-                  <div className="stat-row" title="Upper asymptote (maximum signal)"><span className="stat-label" style={{ cursor: 'help' }}>Top (d)</span><span className="stat-value">{results.fit.parameters['Top (d)']?.toFixed(4) || 'N/A'}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Akaike Information Criterion (corrected). Lower is better."><span className="stat-label">AICc Score</span></span><span className="stat-value">{results.fit.metrics.aicc.toFixed(2)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Coefficient of determination. Closer to 1 is better."><span className="stat-label">R² (Fit)</span></span><span className="stat-value">{results.fit.metrics.r2.toFixed(5)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Lower asymptote (background signal)"><span className="stat-label">Bottom (a)</span></span><span className="stat-value">{results.fit.parameters['Bottom (a)']?.toFixed(4) || 'N/A'}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Steepness of the curve"><span className="stat-label">Hill Slope (b)</span></span><span className="stat-value">{results.fit.parameters['Hill Slope (b)']?.toFixed(4) || 'N/A'}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Concentration at half-maximal response"><span className="stat-label">EC50 (c)</span></span><span className="stat-value">{results.fit.parameters['EC50 (c)']?.toFixed(4) || 'N/A'}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Upper asymptote (maximum signal)"><span className="stat-label">Top (d)</span></span><span className="stat-value">{results.fit.parameters['Top (d)']?.toFixed(4) || 'N/A'}</span></div>
                   {results.fit.parameters['Asymmetry (g)'] !== undefined && (
-                    <div className="stat-row" title="Asymmetry factor for 5PL curves"><span className="stat-label" style={{ cursor: 'help' }}>Asymmetry (g)</span><span className="stat-value">{results.fit.parameters['Asymmetry (g)'].toFixed(4)}</span></div>
+                    <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Asymmetry factor for 5PL curves"><span className="stat-label">Asymmetry (g)</span></span><span className="stat-value">{results.fit.parameters['Asymmetry (g)'].toFixed(4)}</span></div>
                   )}
                 </div>
                 <div className="stats-card">
                   <h3>Clinical Validation</h3>
-                  <div className="stat-row" title="Average signal of the blank replicates"><span className="stat-label" style={{ cursor: 'help' }}>Blank Mean</span><span className="stat-value">{results.meanBlank.toFixed(4)}</span></div>
-                  <div className="stat-row" title="Standard deviation of the blank replicates"><span className="stat-label" style={{ cursor: 'help' }}>Blank SD</span><span className="stat-value">{results.sdBlank.toFixed(4)}</span></div>
-                  <div className="stat-row" title="Pooled standard deviation of the low concentration standards"><span className="stat-label" style={{ cursor: 'help' }}>Pooled SD</span><span className="stat-value">{results.sdPooled.toFixed(4)}</span></div>
-                  <div className="stat-row" title="Critical Level (Decision Limit) - Threshold for false positives"><span className="stat-label" style={{ cursor: 'help' }}>L<sub>C</sub></span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
-                  <div className="stat-row" title="Detection Limit Signal - Threshold guarding against false negatives"><span className="stat-label" style={{ cursor: 'help' }}>L<sub>D</sub></span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Average signal of the blank replicates"><span className="stat-label">Blank Mean</span></span><span className="stat-value">{results.meanBlank.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Standard deviation of the blank replicates"><span className="stat-label">Blank SD</span></span><span className="stat-value">{results.sdBlank.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Pooled standard deviation of the low concentration standards"><span className="stat-label">Pooled SD</span></span><span className="stat-value">{results.sdPooled.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Critical Level (Decision Limit) - Threshold for false positives"><span className="stat-label">L<sub>C</sub></span></span><span className="stat-value" style={{color: '#fab387'}}>{results.lc.toFixed(4)}</span></div>
+                  <div className="stat-row"><span className="stat-label-wrap" data-tooltip="Detection Limit Signal - Threshold guarding against false negatives"><span className="stat-label">L<sub>D</sub></span></span><span className="stat-value" style={{color: '#a6e3a1'}}>{results.ld.toFixed(4)}</span></div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.7...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.8...</p></div>
           )}
         </section>
       </main>
