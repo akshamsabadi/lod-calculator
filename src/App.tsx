@@ -36,6 +36,8 @@ const DEFAULT_STANDARDS: StandardRow[] = [
   { id: '12', conc: '300', signals: '4.92, 5.02, 4.88, 4.95, 4.94' },
 ];
 
+const DEFAULT_BLANKS = '0.15, 0.16, 0.14, 0.15, 0.15';
+
 const formatSuperscript = (val: number): ReactNode => {
   if (val === 0 || isNaN(val)) return '0';
   const exponent = Math.floor(Math.log10(Math.abs(val)));
@@ -51,18 +53,14 @@ const CustomXAxisTick = ({ x, y, payload }: any) => {
   const exponent = Math.round(Math.log10(payload.value));
   return (
     <g transform={`translate(${x},${y + 12})`}>
-      <text x={0} y={0} fill="#9399b2" textAnchor="middle" fontSize={10}>
-        10
-      </text>
-      <text x={8} y={-4} fill="#9399b2" textAnchor="start" fontSize={8}>
-        {exponent}
-      </text>
+      <text x={0} y={0} fill="#9399b2" textAnchor="middle" fontSize={10}>10</text>
+      <text x={8} y={-4} fill="#9399b2" textAnchor="start" fontSize={8}>{exponent}</text>
     </g>
   );
 };
 
 function App() {
-  const [blankSignals, setBlankSignals] = useState('0.15, 0.16, 0.14, 0.15, 0.15');
+  const [blankSignals, setBlankSignals] = useState(DEFAULT_BLANKS);
   const [standardRows, setStandardRows] = useState<StandardRow[]>(DEFAULT_STANDARDS);
   const [fitMethod, setFitMethod] = useState<'4pl' | '5pl' | 'auto'>('auto');
   const [plotTitle, setPlotTitle] = useState('Dose-Response Fitting');
@@ -110,13 +108,11 @@ function App() {
     const minX = Math.min(...results.fit.actualX.filter(x => x > 0));
     const zeroX = minX / 10;
     
-    // Include standards
     const points: {x: number, y: number}[] = results.fit.actualX.map((x, i) => ({ 
       x: x === 0 ? zeroX : x, 
       y: results.fit.actualY[i] 
     }));
     
-    // Include blanks at zeroX position
     const blanks = blankSignals.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
     blanks.forEach(y => points.push({ x: zeroX, y }));
     
@@ -127,44 +123,64 @@ function App() {
     setStandardRows(standardRows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
+  const handleClearData = () => {
+    setBlankSignals('');
+    setStandardRows([{ id: '1', conc: '', signals: '' }]);
+  };
+
+  const handleLoadDemo = () => {
+    setBlankSignals(DEFAULT_BLANKS);
+    setStandardRows(DEFAULT_STANDARDS);
+  };
+
+  const handleCopyMetrics = () => {
+    if (!results) return;
+    const text = `Bioassay Results\nLOD: ${results.lodConc.toExponential(3)}\nAICc: ${results.fit.metrics.aicc.toFixed(2)}\nR2: ${results.fit.metrics.r2.toFixed(5)}\nL_Blank: ${results.lc.toFixed(4)}\nL_Detection: ${results.ld.toFixed(4)}`;
+    navigator.clipboard.writeText(text);
+    alert('Metrics copied to clipboard!');
+  };
+
   return (
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.4</h1>
+          <h1>Bioassay Analytics Pro v9.5</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="action-btn" onClick={handleClearData}>Clear Data</button>
+          <button className="action-btn" onClick={handleLoadDemo}>Load Demo</button>
         </div>
       </header>
       <main className="main-container">
         <aside className="sidebar">
           <section className="sidebar-section">
             <span className="section-title">Model Options</span>
-            <div className="input-group">
-              <label className="input-label">Curve Method</label>
-              <select value={fitMethod} onChange={e => setFitMethod(e.target.value as any)} className="method-select" style={{ padding: '8px', borderRadius: '4px', background: '#1e1e2e', color: '#cdd6f4', border: '1px solid #313244', width: '100%' }}>
-                <option value="auto">Automatic (AICc Optimized)</option>
-                <option value="4pl">4-Parameter Logistic (4PL)</option>
-                <option value="5pl">5-Parameter Logistic (5PL)</option>
-              </select>
-            </div>
+            <select value={fitMethod} onChange={e => setFitMethod(e.target.value as any)} className="method-select">
+              <option value="auto">Automatic (AICc Optimized)</option>
+              <option value="4pl">4-Parameter Logistic (4PL)</option>
+              <option value="5pl">5-Parameter Logistic (5PL)</option>
+            </select>
           </section>
           <section className="sidebar-section">
             <span className="section-title">Plot Settings</span>
-            <div className="input-group"><label className="input-label">Title</label><input type="text" className="text-input" value={plotTitle} onChange={e => setPlotTitle(e.target.value)} /></div>
-            <div className="input-group"><label className="input-label">X Axis</label><input type="text" className="text-input" value={xAxisLabel} onChange={e => setXAxisLabel(e.target.value)} /></div>
-            <div className="input-group"><label className="input-label">Y Axis</label><input type="text" className="text-input" value={yAxisLabel} onChange={e => setYAxisLabel(e.target.value)} /></div>
+            <div className="input-group"><input type="text" className="text-input" placeholder="Title" value={plotTitle} onChange={e => setPlotTitle(e.target.value)} /></div>
+            <div style={{display: 'flex', gap: '8px'}}>
+              <input type="text" className="text-input" placeholder="X Axis" value={xAxisLabel} onChange={e => setXAxisLabel(e.target.value)} />
+              <input type="text" className="text-input" placeholder="Y Axis" value={yAxisLabel} onChange={e => setYAxisLabel(e.target.value)} />
+            </div>
           </section>
           <section className="sidebar-section">
             <span className="section-title">1. Blanks</span>
-            <div className="data-row"><div className="conc-input disabled">0</div><textarea className="signals-input" value={blankSignals} onChange={e => setBlankSignals(e.target.value)} /></div>
+            <div className="data-row"><div className="conc-input disabled">0</div><textarea className="signals-input" placeholder="Comma separated..." value={blankSignals} onChange={e => setBlankSignals(e.target.value)} /></div>
           </section>
           <section className="sidebar-section">
             <span className="section-title">2. Standards</span>
             <div className="rows-container">
               {standardRows.map((r) => (
                 <div key={r.id} className="data-row">
-                  <input type="text" className="conc-input" value={r.conc} onChange={e => updateRow(r.id, 'conc', e.target.value)} />
-                  <textarea className="signals-input" value={r.signals} onChange={e => updateRow(r.id, 'signals', e.target.value)} />
+                  <input type="text" className="conc-input" placeholder="Conc" value={r.conc} onChange={e => updateRow(r.id, 'conc', e.target.value)} />
+                  <textarea className="signals-input" placeholder="Signals..." value={r.signals} onChange={e => updateRow(r.id, 'signals', e.target.value)} />
                   <button className="remove-row-btn" onClick={() => setStandardRows(standardRows.filter(sr => sr.id !== r.id))}>×</button>
                 </div>
               ))}
@@ -181,24 +197,22 @@ function App() {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span className="method-badge">{results.fit.method.toUpperCase()} FIT</span>
                     {results.comparison.betterMethod !== results.fit.method && results.fit.method !== 'auto' && (
-                      <span style={{ background: 'rgba(250, 179, 135, 0.1)', color: '#fab387', border: '1px solid #fab387', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
-                        Better fit available ({results.comparison.betterMethod.toUpperCase()})
-                      </span>
+                      <span className="warning-badge">Better fit available ({results.comparison.betterMethod.toUpperCase()})</span>
                     )}
                   </div>
                 </div>
                 <div className="chart-frame">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 20, right: 40, left: 10, bottom: 40 }}>
+                    <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
                       <XAxis 
                         dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="#cdd6f4" 
                         tick={<CustomXAxisTick />}
-                        label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 12, offset: 25 }}
+                        label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 20 }}
                       />
-                      <YAxis stroke="#cdd6f4" label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 12 }} />
-                      <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244' }} />
-                      <Legend verticalAlign="top" height={36} />
+                      <YAxis stroke="#cdd6f4" label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px', fontSize: '12px' }} />
+                      <Legend verticalAlign="top" height={36} iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
                       
                       <Area dataKey="ciRange" stroke="none" fill="#89b4fa" fillOpacity={0.15} isAnimationActive={false} name="95% CI" />
                       <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
@@ -206,7 +220,7 @@ function App() {
                       
                       <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={{ position: 'right', value: 'Lc', fill: '#fab387', fontSize: 10 }} />
                       <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={{ position: 'right', value: 'Ld', fill: '#a6e3a1', fontSize: 10 }} />
-                      <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 11 }} />
+                      <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 10 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -218,7 +232,10 @@ function App() {
                   <span className="lod-hero-unit">{xAxisLabel.split('(')[0].trim()}</span>
                 </div>
                 <div className="stats-card">
-                  <h3>Curve Fitting Metrics</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ margin: 0 }}>Curve Fitting</h3>
+                    <button className="action-btn" onClick={handleCopyMetrics} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>Copy</button>
+                  </div>
                   <div className="stat-row"><span className="stat-label">AICc Score</span><span className="stat-value">{results.fit.metrics.aicc.toFixed(2)}</span></div>
                   <div className="stat-row"><span className="stat-label">R² (Fit)</span><span className="stat-value">{results.fit.metrics.r2.toFixed(5)}</span></div>
                   <div className="stat-row"><span className="stat-label">Bottom (a)</span><span className="stat-value">{results.fit.parameters['Bottom (a)']?.toFixed(4) || 'N/A'}</span></div>
@@ -240,7 +257,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.4...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.5...</p></div>
           )}
         </section>
       </main>
