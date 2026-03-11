@@ -30,12 +30,14 @@ While useful as a rough estimate for highly linear, low-noise systems, this trad
 This method distinctly separates the concepts of the **Critical Level ($L_C$)**, the **Detection Limit Signal ($L_D$)**, and the final **Concentration Limit of Detection (LOD)** to balance both Type I (false positive) and Type II (false negative) statistical errors.
 
 #### 1. The Critical Level ($L_C$) - "The Decision Limit"
-> $L_C = \text{Mean}_{\text{Blanks}} + (t_{\text{value}} \times \text{SD}_{\text{Blanks}})$
+
+$$ L_C = \text{Mean}_{\text{Blanks}} + (t_{\text{value}} \times \text{SD}_{\text{Blanks}}) $$
 
 The Critical Level is the signal threshold above which an observed response is statistically considered to be distinct from background noise. It is designed to guard against **false positives** (typically set at a 95% confidence level, $\alpha = 0.05$). If your assay yields a signal below $L_C$, it is considered "not detected."
 
 #### 2. The Detection Limit Signal ($L_D$) - "The True Signal"
-> $L_D = L_C + (t_{\text{value}} \times \text{SD}_{\text{Low\_Standards}})$
+
+$$ L_D = L_C + (t_{\text{value}} \times \text{SD}_{\text{Low Standards}}) $$
 
 If a sample's true signal was exactly at $L_C$, normal experimental noise means it would read *below* $L_C$ 50% of the time (yielding a 50% false negative rate). 
 To ensure we can reliably detect the analyte, we must move higher up the curve to $L_D$. $L_D$ is the true signal level at which there is a 95% probability that the *measured* signal will fall above $L_C$, thereby guarding against **false negatives** ($\beta = 0.05$). Notice that $L_D$ incorporates the variance of low-concentration standards, acknowledging that noise changes as concentration increases.

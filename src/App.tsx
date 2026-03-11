@@ -291,7 +291,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay LOD Fitter v10.8</h1>
+          <h1>Bioassay LOD Fitter v10.8.1</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -420,7 +420,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.1...</p></div>
           )}
         </section>
       </main>
