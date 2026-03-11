@@ -22,21 +22,21 @@ interface StandardRow {
 }
 
 const DEFAULT_STANDARDS: StandardRow[] = [
-  { id: '1', conc: '0.001', signals: '0.10, 0.11, 0.10' },
-  { id: '2', conc: '0.003', signals: '0.11, 0.12, 0.11' },
-  { id: '3', conc: '0.01', signals: '0.14, 0.15, 0.14' },
-  { id: '4', conc: '0.03', signals: '0.23, 0.25, 0.24' },
-  { id: '5', conc: '0.1', signals: '0.53, 0.55, 0.54' },
-  { id: '6', conc: '0.3', signals: '1.22, 1.24, 1.23' },
-  { id: '7', conc: '1', signals: '2.54, 2.56, 2.55' },
-  { id: '8', conc: '3', signals: '3.77, 3.79, 3.78' },
-  { id: '9', conc: '10', signals: '4.54, 4.56, 4.55' },
-  { id: '10', conc: '30', signals: '4.83, 4.85, 4.84' },
-  { id: '11', conc: '100', signals: '4.94, 4.96, 4.95' },
-  { id: '12', conc: '300', signals: '4.97, 4.99, 4.98' },
+  { id: '1', conc: '0.001', signals: '0.10, 0.13, 0.08' },
+  { id: '2', conc: '0.003', signals: '0.12, 0.15, 0.09' },
+  { id: '3', conc: '0.01', signals: '0.16, 0.13, 0.18' },
+  { id: '4', conc: '0.03', signals: '0.22, 0.28, 0.24' },
+  { id: '5', conc: '0.1', signals: '0.50, 0.58, 0.54' },
+  { id: '6', conc: '0.3', signals: '1.18, 1.30, 1.25' },
+  { id: '7', conc: '1', signals: '2.45, 2.65, 2.52' },
+  { id: '8', conc: '3', signals: '3.65, 3.85, 3.75' },
+  { id: '9', conc: '10', signals: '4.45, 4.60, 4.52' },
+  { id: '10', conc: '30', signals: '4.78, 4.90, 4.85' },
+  { id: '11', conc: '100', signals: '4.90, 5.01, 4.95' },
+  { id: '12', conc: '300', signals: '4.92, 5.05, 4.98' },
 ];
 
-const DEFAULT_BLANKS = '0.09, 0.10, 0.11';
+const DEFAULT_BLANKS = '0.08, 0.11, 0.09';
 
 const formatSuperscript = (val: number): ReactNode => {
   if (val === 0 || isNaN(val)) return '0';
@@ -49,12 +49,12 @@ const formatSuperscript = (val: number): ReactNode => {
 };
 
 const CustomXAxisTick = ({ x, y, payload }: any) => {
-  if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>0</text>;
+  if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>0</text>;
   const val = payload.value;
   const exponent = Math.round(Math.log10(Math.abs(val)));
 
   return (
-    <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>
+    <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>
       <tspan>1 × 10</tspan>
       <tspan baselineShift="super" fontSize={8}>{exponent}</tspan>
     </text>
@@ -63,7 +63,7 @@ const CustomXAxisTick = ({ x, y, payload }: any) => {
 
 const CustomLcLabel = ({ viewBox }: any) => {
   return (
-    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="#fab387" fontSize={10}>
+    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="var(--peach)" fontSize={10}>
       L<tspan baselineShift="sub" fontSize={8}>C</tspan>
     </text>
   );
@@ -71,7 +71,7 @@ const CustomLcLabel = ({ viewBox }: any) => {
 
 const CustomLdLabel = ({ viewBox }: any) => {
   return (
-    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="#a6e3a1" fontSize={10}>
+    <text x={viewBox.x + viewBox.width + 5} y={viewBox.y + 4} fill="var(--green)" fontSize={10}>
       L<tspan baselineShift="sub" fontSize={8}>D</tspan>
     </text>
   );
@@ -183,7 +183,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v10.1</h1>
+          <h1>Bioassay Analytics Pro v10.2</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -210,11 +210,11 @@ function App() {
             </div>
           </section>
           <section className="sidebar-section">
-            <span className="section-title" style={{ color: 'var(--peach)' }}>1. Blanks</span>
+            <span className="section-title" style={{ color: 'var(--peach)' }}>Blanks</span>
             <div className="data-row"><div className="conc-input disabled" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>0</div><input type="text" className="signals-input" placeholder="Comma separated..." value={blankSignals} onChange={e => setBlankSignals(e.target.value)} /></div>
           </section>
           <section className="sidebar-section">
-            <span className="section-title" style={{ color: 'var(--green)' }}>2. Standards</span>
+            <span className="section-title" style={{ color: 'var(--green)' }}>Standards</span>
             <div className="rows-container">
               {standardRows.map((r) => (
                 <div key={r.id} className="data-row">
@@ -248,30 +248,30 @@ function App() {
                 <div className="chart-frame">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 40 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#313244" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface0)" vertical={false} />
                       <XAxis 
-                        dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="#cdd6f4" 
+                        dataKey="x" type="number" scale="log" domain={['auto', 'auto']} stroke="var(--text)" 
                         ticks={xTicks}
                         tick={<CustomXAxisTick />}
-                        label={{ value: xAxisLabel, position: 'bottom', fill: '#9399b2', fontSize: 11, offset: 25 }}
+                        label={{ value: xAxisLabel, position: 'bottom', fill: 'var(--overlay2)', fontSize: 11, offset: 25 }}
                       />
                       <YAxis 
-                        stroke="#cdd6f4" 
+                        stroke="var(--text)" 
                         domain={yDomain} 
                         allowDataOverflow={true}
                         tickFormatter={(val) => parseFloat(val.toFixed(2)).toString()}
-                        label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11, offset: -5 }} 
+                        label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: 'var(--overlay2)', fontSize: 11, offset: -5 }} 
                       />
                       <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px', fontSize: '12px' }} />
                       <Legend verticalAlign="top" height={36} iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
                       
-                      <Area dataKey="ciRange" stroke="none" fill="#89b4fa" fillOpacity={0.15} isAnimationActive={false} name="95% CI" />
+                      <Area dataKey="ciRange" stroke="none" fill="var(--blue)" fillOpacity={0.15} isAnimationActive={false} name="95% CI" />
                       <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
-                      <Scatter data={scatterData} fill="#f38ba8" name="Measured Data" dataKey="y" isAnimationActive={false} />
+                      <Scatter data={scatterData} fill="var(--red)" name="Measured Data" dataKey="y" isAnimationActive={false} />
                       
                       <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={<CustomLcLabel />} />
                       <ReferenceLine y={results.ld} stroke="#a6e3a1" strokeDasharray="4 4" label={<CustomLdLabel />} />
-                      <ReferenceLine x={results.lodConc} stroke="#f9e2af" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: '#f9e2af', fontSize: 10 }} />
+                      <ReferenceLine x={results.lodConc} stroke="var(--yellow)" strokeWidth={2} label={{ position: 'top', value: 'LOD', fill: 'var(--yellow)', fontSize: 10 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
