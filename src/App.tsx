@@ -10,6 +10,7 @@ import {
   Line,
   ComposedChart,
   ReferenceLine,
+  ReferenceArea,
   Area,
   Legend
 } from 'recharts';
@@ -51,7 +52,12 @@ const formatSuperscript = (val: number): ReactNode => {
 const CustomXAxisTick = ({ x, y, payload }: any) => {
   if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>0</text>;
   const val = payload.value;
-  const exponent = Math.round(Math.log10(Math.abs(val)));
+  const rawExponent = Math.log10(Math.abs(val));
+  const isMajor = Math.abs(rawExponent - Math.round(rawExponent)) < 0.0001;
+  
+  if (!isMajor) return null;
+
+  const exponent = Math.round(rawExponent);
 
   return (
     <text x={x} y={y + 12} fill="var(--overlay2)" textAnchor="middle" fontSize={10}>
@@ -112,6 +118,11 @@ function App() {
     const ticks = [];
     for (let i = logMin; i <= logMax; i++) {
       ticks.push(Math.pow(10, i));
+      if (i < logMax) {
+        for (let j = 2; j <= 9; j++) {
+          ticks.push(j * Math.pow(10, i));
+        }
+      }
     }
     return ticks;
   }, [results]);
@@ -151,11 +162,20 @@ function App() {
     return points;
   }, [results, blankSignals]);
 
-  const yDomain = useMemo((): [number | 'auto', number | 'auto'] => {
-    if (!results) return [0, 'auto'];
+  const { yDomain, yTicks } = useMemo(() => {
+    if (!results) return { yDomain: [0, 'auto'], yTicks: undefined };
     const maxData = Math.max(...results.fit.actualY, results.ld);
     const minData = Math.min(...results.fit.actualY, 0);
-    return [minData, maxData * 1.15];
+    const niceMax = Math.ceil(maxData * 1.1);
+    const niceMin = Math.floor(minData);
+    
+    const ticks = [];
+    const step = niceMax <= 5 ? 1 : Math.ceil(niceMax / 5);
+    for (let i = niceMin; i <= niceMax; i += step) {
+      ticks.push(i);
+    }
+    
+    return { yDomain: [niceMin, niceMax], yTicks: ticks };
   }, [results]);
 
   const updateRow = (id: string, field: 'conc' | 'signals', value: string) => {
@@ -183,7 +203,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v10.2</h1>
+          <h1>Bioassay Analytics Pro v10.3</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -258,15 +278,18 @@ function App() {
                       <YAxis 
                         stroke="var(--text)" 
                         domain={yDomain} 
+                        ticks={yTicks}
                         allowDataOverflow={true}
                         tickFormatter={(val) => parseFloat(val.toFixed(2)).toString()}
                         label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: 'var(--overlay2)', fontSize: 11, offset: -5 }} 
                       />
-                      <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px', fontSize: '12px' }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: 'var(--surface0)', borderRadius: '8px', fontSize: '12px' }} />
                       <Legend verticalAlign="top" height={36} iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
                       
                       <Area dataKey="ciRange" stroke="none" fill="var(--blue)" fillOpacity={0.15} isAnimationActive={false} name="95% CI" />
-                      <Line dataKey="trend" stroke="#89b4fa" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
+                      <ReferenceArea x1={results.lodCI.low} x2={results.lodCI.high} fill="var(--yellow)" fillOpacity={0.15} strokeOpacity={0} ifOverflow="hidden" />
+                      
+                      <Line dataKey="trend" stroke="var(--blue)" strokeWidth={3} dot={false} isAnimationActive={false} name="Model Fit" />
                       <Scatter data={scatterData} fill="var(--red)" name="Measured Data" dataKey="y" isAnimationActive={false} />
                       
                       <ReferenceLine y={results.lc} stroke="#fab387" strokeDasharray="4 4" label={<CustomLcLabel />} />
