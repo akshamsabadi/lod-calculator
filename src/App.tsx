@@ -49,13 +49,18 @@ const formatSuperscript = (val: number): ReactNode => {
 };
 
 const CustomXAxisTick = ({ x, y, payload }: any) => {
-  if (payload.value === 0) return <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>0</text>;
-  const exponent = Math.round(Math.log10(payload.value));
+  if (payload.value === 0 || isNaN(payload.value)) return <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>0</text>;
+  const val = payload.value;
+  const exponent = Math.floor(Math.log10(Math.abs(val)));
+  const base = (val / Math.pow(10, exponent)).toFixed(1);
+  const isOne = parseFloat(base) === 1;
+
   return (
-    <g transform={`translate(${x},${y + 12})`}>
-      <text x={0} y={0} fill="#9399b2" textAnchor="middle" fontSize={10}>10</text>
-      <text x={8} y={-4} fill="#9399b2" textAnchor="start" fontSize={8}>{exponent}</text>
-    </g>
+    <text x={x} y={y + 12} fill="#9399b2" textAnchor="middle" fontSize={10}>
+      {isOne ? null : <tspan>{parseFloat(base)} × </tspan>}
+      <tspan>10</tspan>
+      <tspan baselineShift="super" fontSize={8}>{exponent}</tspan>
+    </text>
   );
 };
 
@@ -144,7 +149,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.6</h1>
+          <h1>Bioassay Analytics Pro v9.7</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -262,7 +267,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.6...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.7...</p></div>
           )}
         </section>
       </main>
