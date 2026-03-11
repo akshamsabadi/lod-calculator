@@ -131,7 +131,7 @@ function App() {
   const [standardRows, setStandardRows] = useState<StandardRow[]>(DEFAULT_STANDARDS);
   const [fitMethod, setFitMethod] = useState<'4pl' | '5pl' | 'auto'>('auto');
   const [plotTitle, setPlotTitle] = useState('Dose-Response Fitting');
-  const [xAxisLabel, setXAxisLabel] = useState('Concentration (M)');
+  const [xAxisLabel, setXAxisLabel] = useState('Concentration (mM)');
   const [yAxisLabel, setYAxisLabel] = useState('Signal Intensity');
 
   const handleDownloadPlot = () => {
@@ -229,14 +229,17 @@ function App() {
     const minX = Math.min(...results.fit.actualX.filter(x => x > 0));
     const maxX = Math.max(...results.fit.actualX);
     const zeroX = minX / 10;
+    const maxAxisValue = maxX * 1.5;
     const logMin = Math.floor(Math.log10(zeroX));
-    const logMax = Math.ceil(Math.log10(maxX * 1.5));
+    const logMax = Math.ceil(Math.log10(maxAxisValue));
     const ticks = [];
     for (let i = logMin; i <= logMax; i++) {
-      ticks.push(Math.pow(10, i));
+      const majorVal = Math.pow(10, i);
+      if (majorVal <= maxAxisValue) ticks.push(majorVal);
       if (i < logMax) {
         for (let j = 2; j <= 9; j++) {
-          ticks.push(j * Math.pow(10, i));
+          const minorVal = j * Math.pow(10, i);
+          if (minorVal <= maxAxisValue) ticks.push(minorVal);
         }
       }
     }
@@ -324,7 +327,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay LOD Fitter v10.8.4</h1>
+          <h1>Bioassay LOD Fitter v10.8.5</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -471,7 +474,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.4...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay LOD Fitter v10.8.5...</p></div>
           )}
         </section>
       </main>
