@@ -22,21 +22,21 @@ interface StandardRow {
 }
 
 const DEFAULT_STANDARDS: StandardRow[] = [
-  { id: '1', conc: '0.001', signals: '0.12, 0.15, 0.10, 0.13, 0.11' },
-  { id: '2', conc: '0.003', signals: '0.14, 0.17, 0.13, 0.15, 0.16' },
-  { id: '3', conc: '0.01', signals: '0.18, 0.22, 0.19, 0.20, 0.21' },
-  { id: '4', conc: '0.03', signals: '0.30, 0.35, 0.28, 0.32, 0.31' },
-  { id: '5', conc: '0.1', signals: '0.58, 0.65, 0.55, 0.61, 0.59' },
-  { id: '6', conc: '0.3', signals: '1.35, 1.48, 1.30, 1.40, 1.38' },
-  { id: '7', conc: '1', signals: '3.10, 3.28, 3.05, 3.18, 3.12' },
-  { id: '8', conc: '3', signals: '4.20, 4.35, 4.15, 4.28, 4.22' },
-  { id: '9', conc: '10', signals: '4.62, 4.78, 4.55, 4.70, 4.65' },
-  { id: '10', conc: '30', signals: '4.80, 4.92, 4.76, 4.85, 4.82' },
-  { id: '11', conc: '100', signals: '4.88, 4.98, 4.84, 4.90, 4.86' },
-  { id: '12', conc: '300', signals: '4.92, 5.02, 4.88, 4.95, 4.94' },
+  { id: '1', conc: '0.001', signals: '0.08, 0.19, 0.05, 0.22, 0.11' },
+  { id: '2', conc: '0.003', signals: '0.11, 0.24, 0.09, 0.18, 0.20' },
+  { id: '3', conc: '0.01', signals: '0.15, 0.35, 0.12, 0.28, 0.19' },
+  { id: '4', conc: '0.03', signals: '0.22, 0.51, 0.28, 0.40, 0.31' },
+  { id: '5', conc: '0.1', signals: '0.45, 0.88, 0.52, 0.70, 0.61' },
+  { id: '6', conc: '0.3', signals: '1.10, 1.75, 1.25, 1.60, 1.42' },
+  { id: '7', conc: '1', signals: '2.50, 3.80, 2.85, 3.45, 3.10' },
+  { id: '8', conc: '3', signals: '3.60, 4.90, 3.95, 4.65, 4.25' },
+  { id: '9', conc: '10', signals: '4.10, 5.25, 4.40, 5.05, 4.75' },
+  { id: '10', conc: '30', signals: '4.35, 5.45, 4.65, 5.20, 4.90' },
+  { id: '11', conc: '100', signals: '4.50, 5.55, 4.75, 5.35, 5.05' },
+  { id: '12', conc: '300', signals: '4.60, 5.60, 4.85, 5.40, 5.15' },
 ];
 
-const DEFAULT_BLANKS = '0.15, 0.16, 0.14, 0.15, 0.15';
+const DEFAULT_BLANKS = '0.10, 0.21, 0.08, 0.18, 0.12';
 
 const formatSuperscript = (val: number): ReactNode => {
   if (val === 0 || isNaN(val)) return '0';
@@ -183,7 +183,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v9.9</h1>
+          <h1>Bioassay Analytics Pro v10.0</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -259,6 +259,7 @@ function App() {
                         stroke="#cdd6f4" 
                         domain={yDomain} 
                         allowDataOverflow={true}
+                        tickFormatter={(val) => parseFloat(val.toFixed(2)).toString()}
                         label={{ value: yAxisLabel, angle: -90, position: 'insideLeft', fill: '#9399b2', fontSize: 11, offset: -5 }} 
                       />
                       <Tooltip contentStyle={{ backgroundColor: '#181825', borderColor: '#313244', borderRadius: '8px', fontSize: '12px' }} />
@@ -307,7 +308,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v9.9...</p></div>
+            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v10.0...</p></div>
           )}
         </section>
       </main>
