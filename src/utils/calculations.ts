@@ -3,7 +3,7 @@
  * For a real clinical app, a library like jstat would be better,
  * but for this prototype, we'll use a standard approximation.
  */
-export const tinv = (p: number, df: number): number => {
+export const tinv = (_p: number, df: number): number => {
   if (df <= 0) return 0;
   // Simple approximation for t-multiplier at 95% confidence (one-tailed)
   // These are standard values used when df is large; for small df, it increases.

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { calculateAdvancedLoD, StandardData } from './utils/calculations';
+import { calculateAdvancedLoD, type StandardData } from './utils/calculations';
 import './App.css';
 
 function App() {
