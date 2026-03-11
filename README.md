@@ -1,8 +1,8 @@
-# Bioassay Analytics Pro
+# Concentration-Response Curve LOD Calculator
 
-Bioassay Analytics Pro is a professional-grade web application built to analyze dose-response data, perform advanced sigmoidal curve fitting, and rigorously calculate the Limit of Detection (LOD) for biological and chemical assays.
+Concentration-Response Curve LOD Calculator is a professional-grade web application built to analyze dose-response data, perform advanced sigmoidal curve fitting, and rigorously calculate the Limit of Detection (LOD) for biological and chemical assays.
 
-**[Launch Bioassay Analytics Pro](https://akshamsabadi.github.io/lod-calculator/)**
+**[Launch Concentration-Response Curve LOD Calculator](https://akshamsabadi.github.io/lod-calculator/)**
 
 ## Overview & Functionality
 
@@ -34,7 +34,7 @@ This application employs a rigorous, clinically validated approach to calculatin
 ### Why this method?
 Many basic tools calculate LOD as simply `3 * Standard Deviation of Blanks`. While useful as a rough estimate for highly linear, low-noise systems, this approach is often inadequate for complex biological assays characterized by non-linear (sigmoidal) responses and heteroscedastic noise (variance that changes with concentration).
 
-Bioassay Analytics Pro utilizes a more robust statistical framework:
+Concentration-Response Curve LOD Calculator utilizes a more robust statistical framework:
 
 1. **Calculate L_C (Critical Level):** 
    `L_C = Mean_Blanks + (t-value * Standard_Deviation_Blanks)`

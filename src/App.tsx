@@ -291,7 +291,7 @@ function App() {
     <div className="app-wrapper">
       <header>
         <div className="header-content">
-          <h1>Bioassay Analytics Pro v10.6</h1>
+          <h1>Concentration-Response Curve LOD Calculator v10.7</h1>
           <p className="header-description">Professional sigmoidal fitting with Clinical LoD validation.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -420,7 +420,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="empty-prompt"><p>Loading Bioassay Analytics Pro v10.0...</p></div>
+            <div className="empty-prompt"><p>Loading Concentration-Response Curve LOD Calculator v10.7...</p></div>
           )}
         </section>
       </main>
