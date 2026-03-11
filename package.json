@@ -1,7 +1,7 @@
 {
   "name": "lod-calculator",
   "private": true,
-  "version": "10.8.8",
+  "version": "10.8.9",
   "type": "module",
   "homepage": "https://akshamsabadi.github.io/lod-calculator/",
   "scripts": {
